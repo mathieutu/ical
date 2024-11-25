@@ -2,6 +2,7 @@ import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 // @ts-expect-error - no types available
 import ICAL from "ical.js";
+import { fetchCalendar } from "$lib/utils/calendar.server";
 
 export const GET: RequestHandler = async ({ url }) => {
   const icalUrls = url.searchParams.getAll("url");
@@ -10,19 +11,7 @@ export const GET: RequestHandler = async ({ url }) => {
     return error(400, "No URLs provided");
   }
 
-  const calendars: ICAL.Component[] = await Promise.all(
-    icalUrls.map(async (url) => {
-      const data = await fetch(url).then((response) => response.text());
-
-      try {
-        const jcalData = ICAL.parse(data);
-        return new ICAL.Component(jcalData);
-      } catch (e) {
-        console.error(e);
-        error(400, `Invalid iCal data for URL: "${url}"`);
-      }
-    }),
-  );
+  const calendars: ICAL.Component[] = await Promise.all(icalUrls.map(fetchCalendar)).then((e: Error) => error(400, e.message));
 
   const mergedCalendar = new ICAL.Component(["vcalendar", [], []]);
 
