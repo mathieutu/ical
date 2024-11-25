@@ -1,7 +1,7 @@
 <script lang="ts">
   import Result from '$lib/components/Result.svelte';
-import Card from '$lib/components/Card.svelte';
-
+  import Card from '$lib/components/Card.svelte';
+  
   import "tailwindcss/tailwind.css";
 
   let mergeUrl: string[] = [];
