@@ -1,17 +1,17 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-// @ts-expect-error - no types available
+
 import ICAL from "ical.js";
 import { fetchCalendar } from "$lib/utils/calendar.server";
 
 export const GET: RequestHandler = async ({ url }) => {
   const icalUrls = url.searchParams.getAll("url");
-
+  
   if (!icalUrls.length) {
     return error(400, "No URLs provided");
   }
-
-  const calendars: ICAL.Component[] = await Promise.all(icalUrls.map(fetchCalendar)).then((e: Error) => error(400, e.message));
+  
+  const calendars: ICAL.Component[] = await Promise.all(icalUrls.map(fetchCalendar)).catch((e: Error) => error(400, e.message));
 
   const mergedCalendar = new ICAL.Component(["vcalendar", [], []]);
 

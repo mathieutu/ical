@@ -1,6 +1,5 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-// @ts-expect-error - no types available
 import ICAL from "ical.js";
 import { fetchCalendar } from "$lib/utils/calendar.server";
 
@@ -21,8 +20,8 @@ export const GET: RequestHandler = async ({ url }) => {
       summary: ev.getFirstPropertyValue('summary'),
       description: ev.getFirstPropertyValue('description'),
       location: ev.getFirstPropertyValue('location'),
-      start: ev.getFirstPropertyValue('dtstart').toString(),
-      end: ev.getFirstPropertyValue('dtend').toString()
+      start: ev.getFirstPropertyValue('dtstart')?.toString(),
+      end: ev.getFirstPropertyValue('dtend')?.toString()
     }))
   };
 
