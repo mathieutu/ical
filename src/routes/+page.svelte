@@ -1,13 +1,11 @@
 <script lang="ts">
   import Result from '$lib/components/Result.svelte';
   import Card from '$lib/components/Card.svelte';
-  
-  import "tailwindcss/tailwind.css";
 
   let mergeUrl: string[] = [];
   $: mergeUrlToLink = [...mergeUrl.filter(Boolean)];
-  $: mergeFinalUrl = mergeUrlToLink.length 
-    ? `${window.location}merge?${mergeUrlToLink.map((url) => `url=${encodeURIComponent(url)}`).join("&")}` 
+  $: mergeFinalUrl = mergeUrlToLink.length
+    ? `${window.location}merge?${mergeUrlToLink.map((url) => `url=${encodeURIComponent(url)}`).join("&")}`
     : '';
 
   let ical2JsonUrl: string = ''
@@ -66,9 +64,3 @@
   </Card>
 </div>
 
-
-<style lang="postcss">
-  :global(html) {
-    background-color: theme(colors.gray.100);
-  }
-</style>
