@@ -3,31 +3,66 @@
   import { page } from '$app/state'
   import { debounce } from '$lib/utils/debounce.js'
   import {
-    differenceInSeconds,
     endOfMonth,
     isAfter,
     isBefore,
     startOfMonth,
     subMonths,
   } from 'date-fns'
-  import { formatDateIso, formatDifferenceInHours } from '$lib/utils/date.js'
+  import { formatDateIso, strictDifferenceInHours } from '$lib/utils/date.js'
   import 'cally'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import type { SearchParam } from '../json/+server'
+  import type { Event } from '$lib/utils/calendar.server'
 
   let { data }: PageProps = $props()
 
-  let stats = $derived(
-    data.calendar.events.reduce(
-      (acc, event) => ({
-        ...acc,
-        [event.summary]:
-          (acc[event.summary] || 0) +
-          differenceInSeconds(event.end, event.start) / 3600,
-      }),
-      {} as Record<string, number>
-    )
+  type Entry = Event & { totalHours: number; key: string }
+  let entries: Entry[] = $derived(
+    !data.grouped
+      ? data.calendar.events.map((ev) => ({
+          ...ev,
+          start: formatDateIso(ev.start),
+          end: formatDateIso(ev.end),
+          key: ev.start,
+          totalHours: strictDifferenceInHours(ev.end, ev.start),
+        }))
+      : Object.values(
+          data.calendar.events.reduce(
+            (acc, ev) => {
+              const existingEntry = acc[ev.summary] || {
+                ...ev,
+                key: ev.summary,
+                start: ev.start,
+                end: ev.end,
+                totalHours: 0,
+              }
+
+              return {
+                ...acc,
+                [ev.summary]: {
+                  ...existingEntry,
+                  start: formatDateIso(
+                    isBefore(existingEntry.start, ev.start)
+                      ? existingEntry.start
+                      : ev.start
+                  ),
+                  end: formatDateIso(
+                    isAfter(existingEntry.end, ev.end)
+                      ? existingEntry.end
+                      : ev.end
+                  ),
+                  totalHours:
+                    existingEntry.totalHours +
+                    strictDifferenceInHours(ev.end, ev.start),
+                  location: '',
+                },
+              }
+            },
+            {} as Record<string, Entry>
+          )
+        )
   )
   const replaceSearchParams = (
     newSearchParams: Partial<Record<SearchParam, string>>
@@ -58,18 +93,18 @@
 
   let oldestEventDate = $derived(
     formatDateIso(
-      data.calendar.events.reduce(
+      entries.reduce(
         (acc, event) => (isBefore(acc, event.start) ? acc : event.start),
-        new Date()
+        ''
       )
     )
   )
 
   let newestEventDate = $derived(
     formatDateIso(
-      data.calendar.events.reduce(
+      entries.reduce(
         (acc, event) => (isAfter(acc, event.end) ? acc : event.end),
-        new Date()
+        ''
       )
     )
   )
@@ -111,7 +146,7 @@
     data-sveltekit-noscroll
   >
     <details class="dropdown" open={showCalendar}>
-      <summary class="input">
+      <summary class="input w-auto">
         <span class="label">Dates</span>
         <span
           >{data.from || oldestEventDate} <span class="text-gray-500">→</span>
@@ -187,7 +222,7 @@
         </div>
       </div>
     </details>
-    <label class="input">
+    <label class="input w-auto">
       <span class="label">Summary</span>
       <input
         type="text"
@@ -200,7 +235,7 @@
         href={replaceSearchParams({ summary: '' })}>×</a
       >
     </label>
-    <label class="select">
+    <label class="select w-auto">
       <span class="label">Sort</span>
       <select
         name="sort"
@@ -213,71 +248,59 @@
         <option value="summary-desc">Summary Descending</option>
       </select>
     </label>
+    <label class="input w-auto cursor-pointer">
+      <input
+        type="checkbox"
+        name="grouped"
+        checked={data.grouped}
+        class="checkbox bg-white!"
+        onchange={() => form.requestSubmit()}
+      />
+      Grouped by Summary
+    </label>
     <input type="hidden" name="url" value={data.url} />
   </form>
 
   <div
-    class="bg-base-100 border-base-300 collapse-arrow collapse border shadow-md"
+    class="card bg-base-100 border-base-300 border text-sm shadow-md
+ "
   >
-    <input type="checkbox" checked />
-    <div class="collapse-title text-xl font-semibold">Statistiques</div>
-    <div class="collapse-content text-sm">
-      <table class="table">
-        <tbody>
-          {#each Object.entries(stats) as [summary, hours] (summary)}
-            <tr class="flex justify-between">
-              <td>{summary}</td>
-              <td>{hours.toFixed(2)} h</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div
-    class="bg-base-100 border-base-300 collapse-arrow collapse border shadow-md"
-  >
-    <input type="checkbox" checked />
-    <div class="collapse-title text-xl font-semibold">Détails</div>
-    <div class="collapse-content text-sm">
-      <ul class="list">
-        {#each data.calendar.events as event (event.start)}
-          <li class="list-row">
-            <div class="list-col-grow">
-              <div class="font-semibold">{event.summary}</div>
-              <div class="text-xs text-gray-400 uppercase">
-                {formatDateIso(event.start)} ({formatDifferenceInHours(
-                  event.end,
-                  event.start
-                )}){#if event.location}, {event.location}{/if}
-              </div>
+    <ul class="list">
+      {#each entries as entry (entry.key)}
+        <li class="list-row">
+          <div class="list-col-grow">
+            <div class="font-semibold">{entry.summary}</div>
+            <div class="text-xs text-gray-400 uppercase">
+              {entry.start}
+              {#if entry.start !== entry.end}
+                → {entry.end}{/if}
+              ({entry.totalHours} h){#if entry.location}, {entry.location}{/if}
             </div>
-            <a
-              class="btn btn-square btn-ghost"
-              aria-labelledby="title"
-              title="Filter by summary"
-              href={replaceSearchParams({ summary: event.summary })}
+          </div>
+          <a
+            class="btn btn-square btn-ghost"
+            aria-labelledby="title"
+            title="Filter by summary"
+            href={replaceSearchParams({ summary: entry.summary })}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-5"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
-                />
-              </svg>
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </div>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
+              />
+            </svg>
+          </a>
+        </li>
+      {/each}
+    </ul>
   </div>
 </main>
 

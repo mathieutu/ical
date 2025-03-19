@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
   return {
     calendar,
     ...(Object.fromEntries(url.searchParams.entries()) as Record<
-      SearchParam,
+      SearchParam | 'grouped',
       string | undefined
     >),
   }

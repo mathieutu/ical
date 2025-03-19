@@ -1,4 +1,9 @@
-import { type DateArg, differenceInMinutes, formatISO } from 'date-fns'
+import {
+  type DateArg,
+  differenceInMinutes,
+  differenceInSeconds,
+  formatISO,
+} from 'date-fns'
 
 export const formatDifferenceInHours = (
   endDate: DateArg<Date>,
@@ -10,6 +15,11 @@ export const formatDifferenceInHours = (
 
   return `${hours}h${minutes || ''}`
 }
+
+export const strictDifferenceInHours = (
+  endDate: DateArg<Date>,
+  startDate: DateArg<Date>
+) => differenceInSeconds(endDate, startDate) / 3600
 
 export const formatDateIso = (date: DateArg<Date>) =>
   formatISO(date, { representation: 'date' })
