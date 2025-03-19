@@ -26,14 +26,12 @@
 </script>
 
 <div
-  class="flex min-h-screen w-full flex-col items-center justify-center gap-8 p-4 dark:bg-gray-950"
+  class="bg-base-200 flex min-h-screen w-full flex-col items-center justify-center gap-8 p-4"
 >
   <div class="text-center">
-    <h1 class="text-5xl font-black text-indigo-600 dark:text-gray-200">
-      iCal manipulation API
-    </h1>
+    <h1 class="text-primary text-5xl font-black">iCal manipulation API</h1>
     <a
-      class="font-extralight underline hover:text-indigo-500"
+      class="hover:text-primary-focus font-extralight underline"
       href="https://github.com/mathieutu">@mathieutu</a
     >
   </div>
@@ -42,18 +40,17 @@
     <div>
       {#each [...mergeUrlToLink, ''] as url, i (i)}
         <div class="mb-4">
-          <label
-            for="url_{i}"
-            class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            Calendar url {i + 1}:
+          <label class="floating-label">
+            <span>Calendar url {i + 1}</span>
+            <input
+              placeholder="Calendar url {i + 1}"
+              bind:value={mergeUrl[i]}
+              type="url"
+              class="input input-bordered w-full"
+              name="calendar_url"
+              autocomplete="url"
+            />
           </label>
-          <input
-            bind:value={mergeUrl[i]}
-            type="url"
-            id="url_{i}"
-            class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-          />
         </div>
       {/each}
       <Result url={mergeFinalUrl} />
@@ -61,35 +58,34 @@
   </Card>
   <Card title="iCal to Json">
     <div class="mb-4">
-      <label
-        for="url_ical2json"
-        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
-        Calendar url:
+      <label class="floating-label">
+        <span>Calendar URL</span>
+        <input
+          bind:value={ical2JsonUrl}
+          type="url"
+          class="input input-bordered w-full"
+          placeholder="Calendar URL"
+          name="calendar_url"
+          autocomplete="url"
+        />
       </label>
-      <input
-        bind:value={ical2JsonUrl}
-        type="url"
-        id="url_ical2json"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-      />
     </div>
     <Result url={ical2JsonFinalUrl} />
   </Card>
   <Card title="Analyse iCal">
     <div class="mb-4">
-      <label
-        for="url_analyse_ical"
-        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
-        Calendar url:
+      <label class="floating-label">
+        <span>Calendar URL</span>
+        <input
+          bind:value={analyseICalUrl}
+          type="url"
+          id="url_analyse_ical"
+          class="input input-bordered w-full"
+          placeholder="Calendar URL"
+          name="calendar_url"
+          autocomplete="url"
+        />
       </label>
-      <input
-        bind:value={analyseICalUrl}
-        type="url"
-        id="url_analyse_ical"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-      />
     </div>
     <Result url={analyseICalFinalUrl} />
   </Card>

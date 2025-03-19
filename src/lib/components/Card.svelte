@@ -1,17 +1,17 @@
 <script lang="ts">
   interface Props {
-    title: string;
-    children?: import('svelte').Snippet;
+    title: string
+    children?: import('svelte').Snippet
   }
 
-  let { title, children }: Props = $props();
+  let { title, children }: Props = $props()
 </script>
 
-<div
-  class="w-full max-w-2xl rounded-lg bg-white px-8 py-6 shadow-md dark:bg-gray-900"
->
-  <h2 class="mb-4 text-center text-2xl font-bold dark:text-gray-200">
-    {title}
-  </h2>
-  {@render children?.()}
+<div class="card bg-base-100 w-full max-w-2xl shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title text-center">{title}</h2>
+    <div class="py-4">
+      {@render children?.()}
+    </div>
+  </div>
 </div>

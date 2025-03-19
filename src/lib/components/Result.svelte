@@ -1,14 +1,14 @@
 <script lang="ts">
   interface Props {
-    url: string;
+    url: string
   }
 
-  let { url }: Props = $props();
+  let { url }: Props = $props()
 </script>
 
 {#if url}
-  <hr class="my-8" />
-  <div class="relative mt-4">
+  <hr class="my-4 text-gray-300" />
+  <div class="relative">
     <div class="pointer-events-none absolute inset-y-0 start-0 ps-3 pt-3">
       <svg
         class="size-5 text-gray-500 dark:text-gray-400"
@@ -29,23 +29,17 @@
       rows="6"
       readonly
       value={url}
-      class="ellipsis block w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 ps-10 text-xs text-gray-900 focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+      class="textarea textarea-bordered w-full bg-gray-100 ps-10 text-xs"
     ></textarea>
     <div class="absolute end-2.5 bottom-2.5 flex gap-2">
       <button
         type="button"
-        class="rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+        class="btn btn-primary btn-soft btn-xs"
         onclick={() => navigator.clipboard.writeText(url)}
       >
         Copy
       </button>
-      <a
-        href={url}
-        class="rounded-md bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-800 hover:bg-indigo-50 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
-        target="_blank"
-      >
-        Open
-      </a>
+      <a href={url} class="btn btn-xs" target="_blank"> Open </a>
     </div>
   </div>
 {/if}
