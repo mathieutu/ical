@@ -1,5 +1,9 @@
 <script lang="ts">
-  export let url: string
+  interface Props {
+    url: string;
+  }
+
+  let { url }: Props = $props();
 </script>
 
 {#if url}
@@ -31,7 +35,7 @@
       <button
         type="button"
         class="rounded-md bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
-        on:click={() => navigator.clipboard.writeText(url)}
+        onclick={() => navigator.clipboard.writeText(url)}
       >
         Copy
       </button>
