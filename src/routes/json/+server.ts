@@ -50,6 +50,9 @@ export const GET: RequestHandler = async ({ url }) => {
         return handleOrder((a.summary || '').localeCompare(b.summary || ''))
       }
 
+      if (field === 'duration') {
+      }
+
       return 0
     })
 

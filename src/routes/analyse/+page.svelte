@@ -266,14 +266,15 @@
  "
   >
     <ul class="list">
-      {#each entries as entry (entry.key)}
+      {#each entries as entry, i (i)}
         <li class="list-row">
           <div class="list-col-grow">
             <div class="font-semibold">{entry.summary}</div>
             <div class="text-xs text-gray-400 uppercase">
               {entry.start}
               {#if entry.start !== entry.end}
-                → {entry.end}{/if}
+                → {entry.end}
+              {/if}
               ({entry.totalHours} h){#if entry.location}, {entry.location}{/if}
             </div>
           </div>
