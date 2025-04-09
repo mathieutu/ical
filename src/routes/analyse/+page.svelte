@@ -9,61 +9,14 @@
     startOfMonth,
     subMonths,
   } from 'date-fns'
-  import { formatDateIso, strictDifferenceInHours } from '$lib/utils/date.js'
+  import { formatDateIso } from '$lib/utils/date.js'
   import 'cally'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
   import type { SearchParam } from '../json/+server'
-  import type { Event } from '$lib/utils/calendar.server'
 
   let { data }: PageProps = $props()
 
-  type Entry = Event & { totalHours: number; key: string }
-  let entries: Entry[] = $derived(
-    !data.grouped
-      ? data.calendar.events.map((ev) => ({
-          ...ev,
-          start: formatDateIso(ev.start),
-          end: formatDateIso(ev.end),
-          key: ev.start,
-          totalHours: strictDifferenceInHours(ev.end, ev.start),
-        }))
-      : Object.values(
-          data.calendar.events.reduce(
-            (acc, ev) => {
-              const existingEntry = acc[ev.summary] || {
-                ...ev,
-                key: ev.summary,
-                start: ev.start,
-                end: ev.end,
-                totalHours: 0,
-              }
-
-              return {
-                ...acc,
-                [ev.summary]: {
-                  ...existingEntry,
-                  start: formatDateIso(
-                    isBefore(existingEntry.start, ev.start)
-                      ? existingEntry.start
-                      : ev.start
-                  ),
-                  end: formatDateIso(
-                    isAfter(existingEntry.end, ev.end)
-                      ? existingEntry.end
-                      : ev.end
-                  ),
-                  totalHours:
-                    existingEntry.totalHours +
-                    strictDifferenceInHours(ev.end, ev.start),
-                  location: '',
-                },
-              }
-            },
-            {} as Record<string, Entry>
-          )
-        )
-  )
   const replaceSearchParams = (
     newSearchParams: Partial<Record<SearchParam, string>>
   ) => {
@@ -93,7 +46,7 @@
 
   let oldestEventDate = $derived(
     formatDateIso(
-      entries.reduce(
+      data.events.reduce(
         (acc, event) => (isBefore(acc, event.start) ? acc : event.start),
         ''
       )
@@ -102,7 +55,7 @@
 
   let newestEventDate = $derived(
     formatDateIso(
-      entries.reduce(
+      data.events.reduce(
         (acc, event) => (isAfter(acc, event.end) ? acc : event.end),
         ''
       )
@@ -119,16 +72,38 @@
 </script>
 
 <main class="grid gap-4 p-4">
+  <div class="">
+    <h1 class="text-5xl font-black text-indigo-600 dark:text-gray-200">
+      iCal manipulation API
+    </h1>
+    <a
+      class="font-extralight underline hover:text-indigo-500"
+      href="https://github.com/mathieutu">@mathieutu</a
+    >
+  </div>
+
   <div class="flex items-center justify-between">
-    <div class="">
-      <h1 class="text-5xl font-black text-indigo-600 dark:text-gray-200">
-        iCal manipulation API
-      </h1>
-      <a
-        class="font-extralight underline hover:text-indigo-500"
-        href="https://github.com/mathieutu">@mathieutu</a
+    <h2
+      class="inline-flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-gray-200"
+    >
+      <svg
+        class="size-5"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="#4f46e5"
       >
-    </div>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
+        />
+      </svg>
+
+      {data.name}
+    </h2>
     <div>
       <a href="/" class="btn">← Back</a>
       <button
@@ -252,7 +227,7 @@
       <input
         type="checkbox"
         name="grouped"
-        checked={data.grouped}
+        checked={!!data.grouped}
         class="checkbox bg-white!"
         onchange={() => form.requestSubmit()}
       />
@@ -266,23 +241,23 @@
  "
   >
     <ul class="list">
-      {#each entries as entry, i (i)}
+      {#each data.events as event, i (i)}
         <li class="list-row">
           <div class="list-col-grow">
-            <div class="font-semibold">{entry.summary}</div>
+            <div class="font-semibold">{event.summary}</div>
             <div class="text-xs text-gray-400 uppercase">
-              {entry.start}
-              {#if entry.start !== entry.end}
-                → {entry.end}
+              {event.start}
+              {#if event.start !== event.end}
+                → {event.end}
               {/if}
-              ({entry.totalHours} h){#if entry.location}, {entry.location}{/if}
+              ({event.totalHours} h){#if event.location}, {event.location}{/if}
             </div>
           </div>
           <a
             class="btn btn-square btn-ghost"
             aria-labelledby="title"
             title="Filter by summary"
-            href={replaceSearchParams({ summary: entry.summary })}
+            href={replaceSearchParams({ summary: event.summary })}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
