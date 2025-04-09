@@ -28,6 +28,13 @@ export const GET: RequestHandler = async ({ url }) => {
     mergedCalendar.addSubcomponent(event)
   })
 
+  mergedCalendar.addPropertyWithValue(
+    'x-wr-calname',
+    calendars
+      .map((cal) => cal.getFirstPropertyValue('x-wr-calname')?.toString())
+      .join(' & ')
+  )
+
   const newIcal = mergedCalendar.toString()
 
   return new Response(newIcal, {

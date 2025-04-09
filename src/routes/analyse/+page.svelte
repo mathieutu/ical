@@ -104,7 +104,7 @@
 
       {data.name}
     </h2>
-    <div>
+    <div class="flex flex-wrap items-center justify-end gap-1">
       <a href="/" class="btn">← Back</a>
       <button
         onclick={() =>
