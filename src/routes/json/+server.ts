@@ -25,6 +25,8 @@ export type AugmentedEvent = Event & { totalHours: number }
 
 export type AugmentedCalendar = Omit<Calendar, 'events'> & {
   events: AugmentedEvent[]
+  totalEventsCount?: number
+  filteredEventsCount?: number
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -43,6 +45,7 @@ export const GET: RequestHandler = async ({ url }) => {
     (e: Error) => error(400, e.message)
   )
   const calendarJson = parseCalendar(calendar)
+  const totalEventsCount = calendarJson.events.length
 
   const fromDate = from ? startOfDay(from) : null
   const toDate = to ? endOfDay(to) : null
@@ -147,5 +150,10 @@ export const GET: RequestHandler = async ({ url }) => {
         totalHours: strictDifferenceInHours(ev.end, ev.start),
       }))
 
-  return json({ ...calendarJson, events: formatedEvents })
+  return json({
+    ...calendarJson,
+    events: formatedEvents,
+    totalEventsCount,
+    filteredEventsCount: sortedEvents.length,
+  })
 }

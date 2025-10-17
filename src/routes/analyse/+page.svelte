@@ -238,6 +238,16 @@
     <input type="hidden" name="url" value={data.url} />
   </form>
 
+  {#if data.totalEventsCount && data.filteredEventsCount !== undefined}
+    <div class="text-sm text-gray-600 dark:text-gray-400">
+      {#if data.grouped}
+        Showing {data.events.length} groups ({data.filteredEventsCount} events) / {data.totalEventsCount} total events
+      {:else}
+        Showing {data.filteredEventsCount} / {data.totalEventsCount} events
+      {/if}
+    </div>
+  {/if}
+
   <div
     class="card bg-base-100 border-base-300 border text-sm shadow-md
  "
@@ -255,27 +265,6 @@
               ({event.totalHours} h){#if event.location}, {event.location}{/if}
             </div>
           </div>
-          <a
-            class="btn btn-square btn-ghost"
-            aria-labelledby="title"
-            title="Filter by summary"
-            href={replaceSearchParams({ summary: event.summary })}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
-              />
-            </svg>
-          </a>
         </li>
       {/each}
     </ul>
