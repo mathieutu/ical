@@ -10,12 +10,13 @@ import {
 import {
   compareAsc,
   endOfDay,
+  format,
   isAfter,
   isBefore,
   startOfDay,
   toDate as date,
 } from 'date-fns'
-import { searchIn } from '$lib/utils/strings'
+import { searchByWord } from '$lib/utils/strings'
 import { strictDifferenceInHours } from '$lib/utils/date'
 
 export type SearchParam = 'url' | 'from' | 'to' | 'summary' | 'sort' | 'grouped'
@@ -52,7 +53,7 @@ export const GET: RequestHandler = async ({ url }) => {
         fromDate && event.start ? date(event.start) >= fromDate : true
       const matchesTo = toDate && event.end ? date(event.end) <= toDate : true
       const matchesSummary =
-        summary && event.summary ? searchIn(summary, event.summary) : true
+        summary && event.summary ? searchByWord(summary, event.summary) : true
 
       return matchesFrom && matchesTo && matchesSummary
     })
@@ -73,39 +74,78 @@ export const GET: RequestHandler = async ({ url }) => {
       return 0
     })
 
-  const formatedEvents: AugmentedEvent[] = !grouped
-    ? sortedEvents.map((ev) => ({
+  const groupByMonth = (events: Event[]): AugmentedEvent[] => {
+    return Object.values(
+      events.reduce(
+        (acc, ev) => {
+          const monthKey = format(date(ev.start), 'yyyy-MM')
+          const existingEvent = acc[monthKey] || {
+            ...ev,
+            summary: format(date(ev.start), 'MMMM yyyy'),
+            totalHours: 0,
+          }
+
+          return {
+            ...acc,
+            [monthKey]: {
+              ...existingEvent,
+              start: isBefore(existingEvent.start, ev.start)
+                ? existingEvent.start
+                : ev.start,
+              end: isAfter(existingEvent.end, ev.end)
+                ? existingEvent.end
+                : ev.end,
+              totalHours:
+                existingEvent.totalHours +
+                strictDifferenceInHours(ev.end, ev.start),
+              location: '',
+            },
+          }
+        },
+        {} as Record<string, AugmentedEvent>
+      )
+    )
+  }
+
+  const groupBySummary = (events: Event[]): AugmentedEvent[] => {
+    return Object.values(
+      events.reduce(
+        (acc, ev) => {
+          const existingEvent = acc[ev.summary] || {
+            ...ev,
+            totalHours: 0,
+          }
+
+          return {
+            ...acc,
+            [ev.summary]: {
+              ...existingEvent,
+              start: isBefore(existingEvent.start, ev.start)
+                ? existingEvent.start
+                : ev.start,
+              end: isAfter(existingEvent.end, ev.end)
+                ? existingEvent.end
+                : ev.end,
+              totalHours:
+                existingEvent.totalHours +
+                strictDifferenceInHours(ev.end, ev.start),
+              location: '',
+            },
+          }
+        },
+        {} as Record<string, AugmentedEvent>
+      )
+    )
+  }
+
+  const formatedEvents: AugmentedEvent[] = grouped
+    ? grouped === 'month'
+      ? groupByMonth(sortedEvents)
+      : groupBySummary(sortedEvents)
+    : sortedEvents.map((ev) => ({
         ...ev,
         totalHours: strictDifferenceInHours(ev.end, ev.start),
       }))
-    : Object.values(
-        sortedEvents.reduce(
-          (acc, ev) => {
-            const existingEvent = acc[ev.summary] || {
-              ...ev,
-              totalHours: 0,
-            }
-
-            return {
-              ...acc,
-              [ev.summary]: {
-                ...existingEvent,
-                start: isBefore(existingEvent.start, ev.start)
-                  ? existingEvent.start
-                  : ev.start,
-                end: isAfter(existingEvent.end, ev.end)
-                  ? existingEvent.end
-                  : ev.end,
-                totalHours:
-                  existingEvent.totalHours +
-                  strictDifferenceInHours(ev.end, ev.start),
-                location: '',
-              },
-            }
-          },
-          {} as Record<string, AugmentedEvent>
-        )
-      )
 
   return json({ ...calendarJson, events: formatedEvents })
 }

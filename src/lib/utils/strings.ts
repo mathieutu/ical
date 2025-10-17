@@ -5,11 +5,28 @@ export const sanitizeForSearch = (str: string) =>
 
 export const searchIn = (needle: string, haystack: string) =>
   sanitizeForSearch(haystack).includes(sanitizeForSearch(needle))
-export const searchByWord = (needle: string, haystack: string) =>
-  sanitizeForSearch(needle)
-    .split(' ')
-    .every((word) =>
-      sanitizeForSearch(haystack)
-        .split(/[\s-]/)
-        .some((hay) => hay.startsWith(word))
-    )
+
+export const searchByWord = (needle: string, haystack: string) => {
+  const sanitizedHaystack = sanitizeForSearch(haystack)
+  const haystackWords = sanitizedHaystack.split(/[\s-]/)
+
+  return sanitizeForSearch(needle)
+    .split(',')
+    .some((orTerm) => {
+      const words = orTerm.trim().split(' ')
+      const includeWords = words.filter((word) => !word.startsWith('-'))
+      const excludeWords = words
+        .filter((word) => word.startsWith('-'))
+        .map((word) => word.slice(1))
+
+      const matchesIncludes = includeWords.every((word) =>
+        haystackWords.some((hay) => hay.startsWith(word))
+      )
+
+      const matchesExcludes = excludeWords.every(
+        (word) => !haystackWords.some((hay) => hay.startsWith(word))
+      )
+
+      return matchesIncludes && matchesExcludes
+    })
+}

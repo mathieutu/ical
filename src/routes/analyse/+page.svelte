@@ -223,15 +223,17 @@
         <option value="summary-desc">Summary Descending</option>
       </select>
     </label>
-    <label class="input w-auto cursor-pointer">
-      <input
-        type="checkbox"
+    <label class="select w-auto">
+      <span class="label">Group by</span>
+      <select
         name="grouped"
-        checked={!!data.grouped}
-        class="checkbox bg-white!"
+        value={data.grouped || ''}
         onchange={() => form.requestSubmit()}
-      />
-      Grouped by Summary
+      >
+        <option value="">No grouping</option>
+        <option value="summary">Summary</option>
+        <option value="month">Month</option>
+      </select>
     </label>
     <input type="hidden" name="url" value={data.url} />
   </form>
