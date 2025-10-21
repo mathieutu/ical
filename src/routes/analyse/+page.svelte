@@ -10,6 +10,7 @@
     subMonths,
   } from 'date-fns'
   import { formatDateIso } from '$lib/utils/date.js'
+  import { formatCurrency } from '$lib/utils/number.js'
   import 'cally'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
@@ -44,6 +45,14 @@
   let form: HTMLFormElement
   let calendar: HTMLElement
 
+  onMount(() => {
+    calendar.addEventListener('change', (e) => {
+      const [from, to] = e.target!.value.split('/')
+      showCalendar = false
+      goto(replaceSearchParams({ from, to }))
+    })
+  })
+
   let oldestEventDate = $derived(
     formatDateIso(
       data.events.reduce(
@@ -66,13 +75,12 @@
     data.events.reduce((acc, event) => acc + event.totalHours, 0)
   )
 
-  onMount(() => {
-    calendar.addEventListener('change', (e) => {
-      const [from, to] = e.target!.value.split('/')
-      showCalendar = false
-      goto(replaceSearchParams({ from, to }))
-    })
-  })
+
+  let hourlyRate = $state<number | null>(null)
+
+  const totalAmount = $derived(
+    hourlyRate ? totalHours * hourlyRate : null
+  )
 </script>
 
 <main class="grid gap-4 p-4">
@@ -243,12 +251,30 @@
   </form>
 
   {#if data.totalEventsCount && data.filteredEventsCount !== undefined}
-    <div class="text-sm text-gray-600 dark:text-gray-400">
-      {#if data.grouped}
-        Showing {data.events.length} groups ({data.filteredEventsCount} events, {totalHours} hours) / {data.totalEventsCount} total events
-      {:else}
-        Showing {data.filteredEventsCount} events ({totalHours} hours) / {data.totalEventsCount} total events
-      {/if}
+    <div class="flex items-center justify-between gap-4">
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        {#if data.grouped}
+          Showing {data.events.length} groups ({data.filteredEventsCount} events, {totalHours.toFixed(
+            2
+          )} hours{#if hourlyRate && totalAmount}{' '}= {formatCurrency(totalAmount)}{/if}) / {data.totalEventsCount} total events
+        {:else}
+          Showing {data.filteredEventsCount} events ({totalHours.toFixed(2)} hours{#if hourlyRate && totalAmount}{' '}= {formatCurrency(
+              totalAmount
+            )}{/if}) / {data.totalEventsCount} total events
+        {/if}
+      </div>
+      <label class="input input-xs w-auto">
+        <span class="label text-xs">Rate</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="0"
+          class="w-16 text-xs"
+          bind:value={hourlyRate}
+        />
+        <span class="label text-xs text-gray-500">€/h</span>
+      </label>
     </div>
   {/if}
 
@@ -266,7 +292,9 @@
               {#if event.start !== event.end}
                 → {event.end}
               {/if}
-              ({event.totalHours} h){#if event.location}, {event.location}{/if}
+              ({event.totalHours} h{#if hourlyRate}{' '}= {formatCurrency(
+                  event.totalHours * hourlyRate
+                )}{/if}){#if event.location}, {event.location}{/if}
             </div>
           </div>
         </li>
