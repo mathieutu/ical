@@ -62,6 +62,10 @@
     )
   )
 
+   const totalHours = $derived(
+    data.events.reduce((acc, event) => acc + event.totalHours, 0)
+  )
+
   onMount(() => {
     calendar.addEventListener('change', (e) => {
       const [from, to] = e.target!.value.split('/')
@@ -241,9 +245,9 @@
   {#if data.totalEventsCount && data.filteredEventsCount !== undefined}
     <div class="text-sm text-gray-600 dark:text-gray-400">
       {#if data.grouped}
-        Showing {data.events.length} groups ({data.filteredEventsCount} events) / {data.totalEventsCount} total events
+        Showing {data.events.length} groups ({data.filteredEventsCount} events, {totalHours} hours) / {data.totalEventsCount} total events
       {:else}
-        Showing {data.filteredEventsCount} / {data.totalEventsCount} events
+        Showing {data.filteredEventsCount} events ({totalHours} hours) / {data.totalEventsCount} total events
       {/if}
     </div>
   {/if}
@@ -257,7 +261,7 @@
         <li class="list-row">
           <div class="list-col-grow">
             <div class="font-semibold">{event.summary}</div>
-            <div class="text-xs text-gray-400 uppercase">
+            <div class="text-xs text-gray-400">
               {event.start}
               {#if event.start !== event.end}
                 → {event.end}
