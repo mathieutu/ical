@@ -81,6 +81,40 @@
   const totalAmount = $derived(
     hourlyRate ? totalHours * hourlyRate : null
   )
+
+  const exportToCSV = () => {
+    const headers = ['Summary', 'Start', 'End', 'Hours']
+    if (hourlyRate) {
+      headers.push('Amount')
+    }
+
+    const csvRows = [
+      headers.join(','),
+      ...data.events.map((event) => {
+        const row = [
+          `"${event.summary?.replace(/"/g, '""') || ''}"`,
+          event.start,
+          event.end,
+          event.totalHours,
+        ]
+        if (hourlyRate) {
+          row.push((event.totalHours * hourlyRate).toFixed(2))
+        }
+        return row.join(',')
+      }),
+    ]
+
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `events-${new Date().toISOString()}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 </script>
 
 <main class="grid gap-4 p-4">
@@ -122,6 +156,10 @@
         onclick={() =>
           navigator.clipboard.writeText(window.location.toString())}
         class="btn">Copy URL</button
+      >
+      <button
+        onclick={exportToCSV}
+        class="btn">Export</button
       >
     </div>
   </div>
