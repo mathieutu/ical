@@ -1,6 +1,7 @@
 <script lang="ts">
   import Result from '$lib/components/Result.svelte'
   import Card from '$lib/components/Card.svelte'
+  import { useBookmarks } from '$lib/utils/bookmarks.svelte'
 
   let mergeUrl: string[] = $state([])
   let mergeUrlToLink = $derived([...mergeUrl.filter(Boolean)])
@@ -24,24 +25,12 @@
       : ''
   )
 
-  let bookmarkedUrls: Record<string, string> = $state(
-    JSON.parse(localStorage.getItem('bookmarkedUrls') || '{}')
-  )
-  $effect(() => {
-    localStorage.setItem('bookmarkedUrls', JSON.stringify(bookmarkedUrls))
-  })
-
-  const addBookmark = (url: string) => () => {
-    const existingBookmark = !!bookmarkedUrls[url]
-    if (existingBookmark) {
-      return
-    }
-    const name = prompt('Enter a name for the bookmark:')
-    if (name) {
-      bookmarkedUrls[url] = name
-    }
-  }
+  const { bookmarkedUrls, addBookmark, removeBookmark } = useBookmarks()
 </script>
+<svelte:head>
+	<title>iCal manipulation API</title>
+	<meta name="description" content="Analyze your iCal files with ease" />
+</svelte:head>
 
 <div
   class="bg-base-200 flex min-h-screen w-full flex-col items-center justify-center gap-8 p-4"
@@ -95,7 +84,7 @@
                 class="btn btn-square btn-ghost"
                 title="Remove from bookmarks"
                 aria-labelledby="title"
-                onclick={() => delete bookmarkedUrls[url]}
+                onclick={() => removeBookmark(url)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -133,7 +122,7 @@
           </label>
         </div>
       {/each}
-      <Result url={mergeFinalUrl} onBookmark={addBookmark(mergeFinalUrl)} />
+      <Result url={mergeFinalUrl} onBookmark={() => addBookmark(mergeFinalUrl)} />
     </div>
   </Card>
   <Card title="iCal to Json">
@@ -150,7 +139,7 @@
     </div>
     <Result
       url={ical2JsonFinalUrl}
-      onBookmark={addBookmark(ical2JsonFinalUrl)}
+      onBookmark={() => addBookmark(ical2JsonFinalUrl)}
     />
   </Card>
   <Card title="Analyse iCal">
@@ -168,7 +157,7 @@
     </div>
     <Result
       url={analyseICalFinalUrl}
-      onBookmark={addBookmark(analyseICalFinalUrl)}
+      onBookmark={() => addBookmark(analyseICalFinalUrl)}
     />
   </Card>
 </div>
