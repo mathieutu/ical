@@ -16,7 +16,8 @@
   import { goto } from '$app/navigation'
   import type { SearchParam } from '../json/+server'
 
-  let { data }: PageProps = $props()
+  const { data }: PageProps = $props()
+  const { events, stats, query, ...calendar } = data
 
   const replaceSearchParams = (
     newSearchParams: Partial<Record<SearchParam, string>>
@@ -42,80 +43,21 @@
 
   let showCalendar = $state(false)
 
-  let form: HTMLFormElement
-  let calendar: HTMLElement
+  let formEl: HTMLFormElement
+  let calendarEl: HTMLElement
 
   onMount(() => {
-    calendar.addEventListener('change', (e) => {
+    calendarEl.addEventListener('change', (e) => {
       const [from, to] = e.target!.value.split('/')
       showCalendar = false
       goto(replaceSearchParams({ from, to }))
     })
   })
-
-  let oldestEventDate = $derived(
-    formatDateIso(
-      data.events.reduce(
-        (acc, event) => (isBefore(acc, event.start) ? acc : event.start),
-        ''
-      )
-    )
-  )
-
-  let newestEventDate = $derived(
-    formatDateIso(
-      data.events.reduce(
-        (acc, event) => (isAfter(acc, event.end) ? acc : event.end),
-        ''
-      )
-    )
-  )
-
-   const totalHours = $derived(
-    data.events.reduce((acc, event) => acc + event.totalHours, 0)
-  )
-
-
-  let hourlyRate = $state<number | null>(null)
-
-  const totalAmount = $derived(
-    hourlyRate ? totalHours * hourlyRate : null
-  )
-
-  const exportToCSV = () => {
-    const headers = ['Summary', 'Start', 'End', 'Hours']
-    if (hourlyRate) {
-      headers.push('Amount')
-    }
-
-    const csvRows = [
-      headers.join(','),
-      ...data.events.map((event) => {
-        const row = [
-          `"${event.summary?.replace(/"/g, '""') || ''}"`,
-          event.start,
-          event.end,
-          event.totalHours,
-        ]
-        if (hourlyRate) {
-          row.push((event.totalHours * hourlyRate).toFixed(2))
-        }
-        return row.join(',')
-      }),
-    ]
-
-    const csvContent = csvRows.join('\n')
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `events-${new Date().toISOString()}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
 </script>
+<svelte:head>
+	<title>iCal Analytics - {calendar.name}</title>
+	<meta name="description" content="This is where the description goes for SEO" />
+</svelte:head>
 
 <main class="grid gap-4 p-4">
   <div class="">
@@ -148,7 +90,7 @@
         />
       </svg>
 
-      {data.name}
+      {calendar.name}
     </h2>
     <div class="flex flex-wrap items-center justify-end gap-1">
       <a href="/" class="btn">← Back</a>
@@ -157,25 +99,25 @@
           navigator.clipboard.writeText(window.location.toString())}
         class="btn">Copy URL</button
       >
-      <button
-        onclick={exportToCSV}
-        class="btn">Export</button
+      <a
+        href="/csv?{page.url.searchParams.toString()}"
+        class="btn">Export</a
       >
     </div>
   </div>
   <form
-    class="flex items-center gap-4"
     method="GET"
-    bind:this={form}
+    bind:this={formEl}
     data-sveltekit-keepfocus
     data-sveltekit-noscroll
   >
+  <div class="flex items-center gap-4">
     <details class="dropdown" open={showCalendar}>
       <summary class="input w-auto">
         <span class="label">Dates</span>
         <span
-          >{data.from || oldestEventDate} <span class="text-gray-500">→</span>
-          {data.to || newestEventDate}</span
+          >{query.from || stats.earliestStart?.split(' ')[0]} <span class="text-gray-500">→</span>
+          {query.to || stats.latestEnd?.split(' ')[0]}</span
         >
         <a
           class="label text-gray-400 hover:text-gray-900"
@@ -195,11 +137,11 @@
 
         <div class="flex justify-center">
           <calendar-range
-            value="{data.from}/{data.to}"
+            value="{query.from}/{query.to}"
             class="cally justify-center"
             months={2}
             onchange={console.log}
-            bind:this={calendar}
+            bind:this={calendarEl}
           >
             <svg
               aria-label="Previous"
@@ -231,8 +173,8 @@
             <input
               type="date"
               name="from"
-              value={data.from}
-              onchange={() => form.requestSubmit()}
+              value={query.from}
+              onchange={() => formEl.requestSubmit()}
             />
           </label>
           <label class="input input-xs">
@@ -240,8 +182,8 @@
             <input
               type="date"
               name="to"
-              value={data.to}
-              onchange={() => form.requestSubmit()}
+              value={query.to}
+              onchange={() => formEl.requestSubmit()}
             />
           </label>
         </div>
@@ -252,8 +194,8 @@
       <input
         type="text"
         name="summary"
-        value={data.summary}
-        oninput={debounce(() => form.requestSubmit(), 300)}
+        value={query.summary}
+        oninput={debounce(() => formEl.requestSubmit(), 300)}
       />
       <a
         class="label text-gray-400 hover:text-gray-900"
@@ -264,8 +206,8 @@
       <span class="label">Sort</span>
       <select
         name="sort"
-        value={data.sort}
-        onchange={() => form.requestSubmit()}
+        value={query.sort}
+        onchange={() => formEl.requestSubmit()}
       >
         <option value="date-asc">Date Ascending</option>
         <option value="date-desc">Date Descending</option>
@@ -277,28 +219,27 @@
       <span class="label">Group by</span>
       <select
         name="grouped"
-        value={data.grouped || ''}
-        onchange={() => form.requestSubmit()}
+        value={query.grouped || ''}
+        onchange={() => formEl.requestSubmit()}
       >
         <option value="">No grouping</option>
         <option value="summary">Summary</option>
         <option value="month">Month</option>
       </select>
     </label>
-    <input type="hidden" name="url" value={data.url} />
-  </form>
-
-  {#if data.totalEventsCount && data.filteredEventsCount !== undefined}
-    <div class="flex items-center justify-between gap-4">
+    <input type="hidden" name="url" value={query.url} />
+  </div>
+  {#if data.stats.totalEventsCount && data.stats.filteredEventsCount !== undefined}
+    <div class="flex items-center justify-between gap-4 mt-1">
       <div class="text-sm text-gray-600 dark:text-gray-400">
-        {#if data.grouped}
-          Showing {data.events.length} groups ({data.filteredEventsCount} events, {totalHours.toFixed(
+        {#if query.grouped}
+          Showing {data.events.length} groups ({data.stats.filteredEventsCount} events, {data.stats.totalHours.toFixed(
             2
-          )} hours{#if hourlyRate && totalAmount}{' '}= {formatCurrency(totalAmount)}{/if}) / {data.totalEventsCount} total events
+          )} hours{#if data.stats.totalAmount}{' '}= {formatCurrency(data.stats.totalAmount)}{/if}) / {data.stats.totalEventsCount} total events
         {:else}
-          Showing {data.filteredEventsCount} events ({totalHours.toFixed(2)} hours{#if hourlyRate && totalAmount}{' '}= {formatCurrency(
-              totalAmount
-            )}{/if}) / {data.totalEventsCount} total events
+          Showing {data.stats.filteredEventsCount} events ({data.stats.totalHours.toFixed(2)} hours{#if data.stats.totalAmount}{' '}= {formatCurrency(
+              data.stats.totalAmount
+            )}{/if}) / {data.stats.totalEventsCount} total events
         {/if}
       </div>
       <label class="input input-xs w-auto">
@@ -309,12 +250,15 @@
           min="0"
           placeholder="0"
           class="w-16 text-xs"
-          bind:value={hourlyRate}
+          name="hourlyRate"
+          value="{query.hourlyRate || ''}"
+          oninput={debounce(() => formEl.requestSubmit(), 300)}
         />
         <span class="label text-xs text-gray-500">€/h</span>
       </label>
     </div>
   {/if}
+</form>
 
   <div
     class="card bg-base-100 border-base-300 border text-sm shadow-md
@@ -330,9 +274,7 @@
               {#if event.start !== event.end}
                 → {event.end}
               {/if}
-              ({event.totalHours} h{#if hourlyRate}{' '}= {formatCurrency(
-                  event.totalHours * hourlyRate
-                )}{/if}){#if event.location}, {event.location}{/if}
+              ({event.totalHours} h{#if event.amount}{' '}= {formatCurrency(event.amount)}{/if}){#if event.location}, {event.location}{/if}
             </div>
           </div>
         </li>

@@ -19,14 +19,22 @@ import {
 import { searchByWord } from '$lib/utils/strings'
 import { strictDifferenceInHours } from '$lib/utils/date'
 
-export type SearchParam = 'url' | 'from' | 'to' | 'summary' | 'sort' | 'grouped'
+export type SearchParam = 'url' | 'from' | 'to' | 'summary' | 'sort' | 'grouped' | 'hourlyRate'
 
-export type AugmentedEvent = Event & { totalHours: number }
 
-export type AugmentedCalendar = Omit<Calendar, 'events'> & {
+export type AugmentedEvent = Event & { totalHours: number, amount?: number }
+
+export type Response = Omit<Calendar, 'events'> & {
   events: AugmentedEvent[]
-  totalEventsCount?: number
-  filteredEventsCount?: number
+  stats: {
+    totalEventsCount?: number
+    filteredEventsCount?: number
+    totalHours: number
+    totalAmount?: number
+    earliestStart?: string
+    latestEnd?: string
+  }
+  query: Record<SearchParam, string | null>
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -36,6 +44,7 @@ export const GET: RequestHandler = async ({ url }) => {
   const summary = url.searchParams.get('summary')
   const sort = url.searchParams.get('sort') || 'date-asc'
   const grouped = url.searchParams.get('grouped')
+  const hourlyRate = url.searchParams.get('hourlyRate')
 
   if (!icalUrl?.length) {
     return error(400, 'No URL provided')
@@ -141,19 +150,67 @@ export const GET: RequestHandler = async ({ url }) => {
     )
   }
 
-  const formatedEvents: AugmentedEvent[] = grouped
-    ? grouped === 'month'
-      ? groupByMonth(sortedEvents)
-      : groupBySummary(sortedEvents)
-    : sortedEvents.map((ev) => ({
-        ...ev,
-        totalHours: strictDifferenceInHours(ev.end, ev.start),
-      }))
+  const groupEvents = (events: Event[]): AugmentedEvent[] => {
+    if (grouped === 'month') {
+      return groupByMonth(events)
+    }
+
+    if (grouped === 'summary') {
+      return groupBySummary(events)
+    }
+
+    return events.map((ev) => ({
+      ...ev,
+      totalHours: strictDifferenceInHours(ev.end, ev.start),
+    }))
+  }
+
+  const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents)
+    .map((ev) => {
+      if (hourlyRate) {
+        const rate = parseFloat(hourlyRate)
+        if (!isNaN(rate)) {
+          return {
+            ...ev,
+            amount: ev.totalHours * rate,
+          }
+        }
+      }
+      return ev
+    })
+
+  // Calculate earliest start and latest end dates
+  const earliestStart = formatedEvents.length > 0
+    ? format(date(formatedEvents.reduce((min, event) => 
+        date(event.start) < date(min.start) ? event : min
+      ).start), 'yyyy-MM-dd HH:mm')
+    : undefined
+  
+  const latestEnd = formatedEvents.length > 0
+    ? format(date(formatedEvents.reduce((max, event) => 
+        date(event.end) > date(max.end) ? event : max
+      ).end), 'yyyy-MM-dd HH:mm')
+    : undefined
 
   return json({
     ...calendarJson,
     events: formatedEvents,
-    totalEventsCount,
-    filteredEventsCount: sortedEvents.length,
-  })
+    stats: {
+      totalEventsCount,
+      filteredEventsCount: sortedEvents.length,
+      totalHours: formatedEvents.reduce((sum, ev) => sum + ev.totalHours, 0),
+      totalAmount: formatedEvents.reduce((sum, ev) => sum + (ev.amount || 0), 0),
+      earliestStart,
+      latestEnd,
+    },
+    query: {
+      url: icalUrl,
+      from,
+      to,
+      summary,
+      sort,
+      grouped,
+      hourlyRate,
+    }
+  } satisfies Response)
 }
