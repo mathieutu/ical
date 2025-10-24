@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit'
+import { error, json, redirect } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import ICAL from 'ical.js'
 import {
@@ -19,10 +19,16 @@ import {
 import { searchByWord } from '$lib/utils/strings'
 import { strictDifferenceInHours } from '$lib/utils/date'
 
-export type SearchParam = 'url' | 'from' | 'to' | 'summary' | 'sort' | 'grouped' | 'hourlyRate'
+export type SearchParam =
+  | 'url'
+  | 'from'
+  | 'to'
+  | 'summary'
+  | 'sort'
+  | 'grouped'
+  | 'hourlyRate'
 
-
-export type AugmentedEvent = Event & { totalHours: number, amount?: number }
+export type AugmentedEvent = Event & { totalHours: number; amount?: number }
 
 export type Response = Omit<Calendar, 'events'> & {
   events: AugmentedEvent[]
@@ -38,6 +44,10 @@ export type Response = Omit<Calendar, 'events'> & {
 }
 
 export const GET: RequestHandler = async ({ url }) => {
+  if (!url.searchParams.get('url')) {
+    return redirect(303, '/?tab=json')
+  }
+
   const icalUrl = url.searchParams.get('url')
   const from = url.searchParams.get('from')
   const to = url.searchParams.get('to')
@@ -165,8 +175,8 @@ export const GET: RequestHandler = async ({ url }) => {
     }))
   }
 
-  const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents)
-    .map((ev) => {
+  const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents).map(
+    (ev) => {
       if (hourlyRate) {
         const rate = parseFloat(hourlyRate)
         if (!isNaN(rate)) {
@@ -177,20 +187,33 @@ export const GET: RequestHandler = async ({ url }) => {
         }
       }
       return ev
-    })
+    }
+  )
 
   // Calculate earliest start and latest end dates
-  const earliestStart = formatedEvents.length > 0
-    ? format(date(formatedEvents.reduce((min, event) => 
-        date(event.start) < date(min.start) ? event : min
-      ).start), 'yyyy-MM-dd HH:mm')
-    : undefined
-  
-  const latestEnd = formatedEvents.length > 0
-    ? format(date(formatedEvents.reduce((max, event) => 
-        date(event.end) > date(max.end) ? event : max
-      ).end), 'yyyy-MM-dd HH:mm')
-    : undefined
+  const earliestStart =
+    formatedEvents.length > 0
+      ? format(
+          date(
+            formatedEvents.reduce((min, event) =>
+              date(event.start) < date(min.start) ? event : min
+            ).start
+          ),
+          'yyyy-MM-dd HH:mm'
+        )
+      : undefined
+
+  const latestEnd =
+    formatedEvents.length > 0
+      ? format(
+          date(
+            formatedEvents.reduce((max, event) =>
+              date(event.end) > date(max.end) ? event : max
+            ).end
+          ),
+          'yyyy-MM-dd HH:mm'
+        )
+      : undefined
 
   return json({
     ...calendarJson,
@@ -199,7 +222,10 @@ export const GET: RequestHandler = async ({ url }) => {
       totalEventsCount,
       filteredEventsCount: sortedEvents.length,
       totalHours: formatedEvents.reduce((sum, ev) => sum + ev.totalHours, 0),
-      totalAmount: formatedEvents.reduce((sum, ev) => sum + (ev.amount || 0), 0),
+      totalAmount: formatedEvents.reduce(
+        (sum, ev) => sum + (ev.amount || 0),
+        0
+      ),
       earliestStart,
       latestEnd,
     },
@@ -211,6 +237,6 @@ export const GET: RequestHandler = async ({ url }) => {
       sort,
       grouped,
       hourlyRate,
-    }
+    },
   } satisfies Response)
 }

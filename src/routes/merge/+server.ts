@@ -1,10 +1,14 @@
-import { error } from '@sveltejs/kit'
+import { error, redirect } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 
 import ICAL from 'ical.js'
 import { fetchCalendar } from '$lib/utils/calendar.server'
 
 export const GET: RequestHandler = async ({ url }) => {
+  if (!url.searchParams.get('url')) {
+    return redirect(303, '/?tab=merge')
+  }
+
   const icalUrls = url.searchParams.getAll('url')
 
   if (!icalUrls.length) {

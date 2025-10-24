@@ -1,8 +1,13 @@
 import type { RequestHandler } from './$types'
 import type { Response } from '../json/+server'
 import { format, toDate as date } from 'date-fns'
+import { redirect } from '@sveltejs/kit'
 
 export const GET: RequestHandler = async ({ url, fetch }) => {
+  if (!url.searchParams.get('url')) {
+    return redirect(303, '/?tab=csv')
+  }
+
   // Fetch data from the JSON route
   const res = await fetch(`/json?${url.searchParams.toString()}`)
   const calendar: Response = await res.json()
@@ -15,11 +20,17 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
     headers.push('Amount')
   }
 
-  const escapeCsvValue = (value: string | number | null | undefined): string => {
+  const escapeCsvValue = (
+    value: string | number | null | undefined
+  ): string => {
     if (value === null || value === undefined) return ''
-    
+
     const stringValue = String(value)
-    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+    if (
+      stringValue.includes(',') ||
+      stringValue.includes('"') ||
+      stringValue.includes('\n')
+    ) {
       return `"${stringValue.replace(/"/g, '""')}"`
     }
 
@@ -37,14 +48,14 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
       row.push(escapeCsvValue(event.amount?.toFixed(2)))
     }
     return row.join(',')
-   })
+  })
 
   // Add summary row
   const summaryRow = [
-    'TOTAL', 
-    escapeCsvValue(stats.earliestStart), 
-    escapeCsvValue(stats.latestEnd), 
-    escapeCsvValue(stats.totalHours.toFixed(2))
+    'TOTAL',
+    escapeCsvValue(stats.earliestStart),
+    escapeCsvValue(stats.latestEnd),
+    escapeCsvValue(stats.totalHours.toFixed(2)),
   ]
   if (stats.totalAmount) {
     summaryRow.push(escapeCsvValue(stats.totalAmount?.toFixed(2)))

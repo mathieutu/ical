@@ -2,7 +2,9 @@
 @plugin "daisyui";
 
 @layer utilities {
-  .input, .select, .textarea {
+  .input,
+  .select,
+  .textarea {
     @apply focus-within:outline-none focus:outline-none;
   }
 }
