@@ -73,7 +73,7 @@
     </h1>
     <a
       class="font-extralight underline hover:text-indigo-500"
-      href="https://github.com/mathieutu">@mathieutu</a
+      href="https://www.mathieutu.dev">@mathieutu</a
     >
   </div>
 
