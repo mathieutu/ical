@@ -68,18 +68,18 @@
 
 <main class="grid gap-4 p-4">
   <div class="">
-    <h1 class="text-5xl font-black text-indigo-600 dark:text-gray-200">
+    <h1 class="text-5xl font-black text-primary">
       iCal manipulation API
     </h1>
     <a
-      class="font-extralight underline hover:text-indigo-500"
+      class="font-extralight underline link link-hover link-primary"
       href="https://www.mathieutu.dev">@mathieutu</a
     >
   </div>
 
   <div class="flex items-center justify-between">
     <h2
-      class="inline-flex items-center gap-2 text-xl font-bold text-indigo-600 dark:text-gray-200"
+      class="inline-flex items-center gap-2 text-xl font-bold text-primary"
     >
       {@render CalendarIcon({ class: 'size-5' })}
 
@@ -145,11 +145,11 @@
           <span class="label">Dates</span>
           <span
             >{query.from || stats.earliestStart?.split(' ')[0]}
-            <span class="text-gray-500">→</span>
+            <span class="text-base-content/50">→</span>
             {query.to || stats.latestEnd?.split(' ')[0]}</span
           >
           <a
-            class="label text-gray-400 hover:text-gray-900"
+            class="label text-base-content/40 hover:text-base-content"
             href={replaceSearchParams({ from: '', to: '' })}>×</a
           >
         </summary>
@@ -219,7 +219,7 @@
           oninput={debounce(() => formEl.requestSubmit(), 300)}
         />
         <a
-          class="label text-gray-400 hover:text-gray-900"
+          class="label text-base-content/40 hover:text-base-content"
           href={replaceSearchParams({ summary: '' })}>×</a
         >
       </label>
@@ -252,7 +252,7 @@
     </div>
     {#if stats.totalEventsCount && stats.filteredEventsCount !== undefined}
       <div class="mt-1 flex items-center justify-between gap-4">
-        <div class="text-sm text-gray-600 dark:text-gray-400">
+        <div class="text-sm text-base-content/60">
           {#if query.grouped}
             Showing {events.length} groups ({stats.filteredEventsCount} events, {stats.totalHours.toFixed(
               2
@@ -279,7 +279,7 @@
             value={query.hourlyRate || ''}
             oninput={debounce(() => formEl.requestSubmit(), 300)}
           />
-          <span class="label text-xs text-gray-500">€/h</span>
+          <span class="label text-xs text-base-content/50">€/h</span>
         </label>
       </div>
     {/if}
@@ -294,7 +294,7 @@
         <li class="list-row">
           <div class="list-col-grow">
             <div class="font-semibold">{event.summary}</div>
-            <div class="text-xs text-gray-400">
+            <div class="text-xs text-base-content/40">
               {event.start}
               {#if event.start !== event.end}
                 → {event.end}
