@@ -1,6 +1,5 @@
 <script lang="ts">
   import { useBookmarks } from '$lib/utils/bookmarks.svelte'
-  import { buildUrlWithParams } from '$lib/utils/url'
   import { page } from '$app/state'
   import {
     TagIcon,
@@ -18,16 +17,17 @@
     DownloadIcon,
   } from '$lib/components/icons.svelte'
   import BookmarkCard from '$lib/components/BookmarkCard.svelte'
+    import { buildUrlWithParams } from '$lib/utils/searchParams'
 
   let mergeUrl: string[] = $state([])
   let mergeUrlToLink = $derived([...mergeUrl.filter(Boolean)])
   let mergeFinalUrl = $derived.by(() => {
     if (!mergeUrlToLink.length) return ''
-    return buildUrlWithParams('analyse', page.url, { url: mergeUrlToLink })
+    return buildUrlWithParams('analyse', page.url, { urls: mergeUrlToLink })
   })
   let mergeIcsUrl = $derived.by(() => {
     if (!mergeUrlToLink.length) return ''
-    return buildUrlWithParams('ics', page.url, { url: mergeUrlToLink })
+    return buildUrlWithParams('ics', page.url, { urls: mergeUrlToLink })
   })
 
   let singleUrl: string = $state('')
@@ -39,7 +39,7 @@
 
   let singleUrlFinalUrl = $derived.by(() => {
     if (!singleUrl.length) return ''
-    return buildUrlWithParams(activeTab, page.url, { url: singleUrl })
+    return buildUrlWithParams(activeTab, page.url, { urls: [singleUrl] })
   })
 
   const { bookmarkedUrls, addBookmark, removeBookmark } = useBookmarks()

@@ -38,13 +38,13 @@ export type JsonResponse = Omit<Calendar, 'events'> & {
 export const GET: RequestHandler = async ({ url,  }) => {
   const query = getQueryParams(url.searchParams)
 
-  if (!query.url.length) {
+  if (!query.urls.length) {
     return error(400, 'No URL provided')
   }
 
   // Fetch and parse all calendars
   const calendars: ICAL.Component[] = await Promise.all(
-    query.url.map(fetchCalendar)
+    query.urls.map(fetchCalendar)
   ).catch((e: Error) => error(400, e.message))
 
   const parsedCalendars = calendars.map(parseCalendar)

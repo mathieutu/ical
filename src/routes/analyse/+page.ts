@@ -8,7 +8,8 @@ import { endOfMonth, startOfMonth } from 'date-fns'
 export const ssr = false
 
 export const load: PageLoad = async ({ fetch, url })  => {
-  if (!url.searchParams.get('url')) {
+  
+  if (!url.searchParams.get('urls')) {
     return redirect(303, '/?tab=analyse')
   }
 

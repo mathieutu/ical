@@ -1,7 +1,7 @@
 import { uniq } from "./arrays"
 
 export type QueryParams = {
-    url: string[]
+    urls: string[]
     from?: string
     to?: string
     summary?: string
@@ -18,7 +18,7 @@ export const getQueryParams = (
 ): QueryParams => {
   const searchParams = new URLSearchParams(url);
   return {
-    url: uniq(searchParams.getAll('url')),
+    urls: uniq(searchParams.getAll('urls')),
     from: searchParams.get('from') || undefined,
     to: searchParams.get('to') || undefined,
     summary: searchParams.get('summary') || undefined,
@@ -33,7 +33,7 @@ export const buildSearchParams = (
     ): URLSearchParams => {
     const searchParams = new URLSearchParams()
 
-    uniq(params.url).forEach((u) => searchParams.append('url', u))
+    uniq(params.urls).forEach((u) => searchParams.append('urls', u))
     if (params.from) searchParams.set('from', params.from)
     if (params.to) searchParams.set('to', params.to)
     if (params.summary) searchParams.set('summary', params.summary)

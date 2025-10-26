@@ -170,7 +170,7 @@
     <div class="flex items-center gap-4">
         <DetailsWithFocusOut class="dropdown">
           <summary class="input w-auto cursor-pointer">
-            {query.url.length} Calendar{query.url.length === 1 ? '' : 's'}
+            {query.urls.length} Calendar{query.urls.length === 1 ? '' : 's'}
           </summary>
           <div
             class="dropdown-content bg-base-100 rounded-box border-base-300 z-[1] mt-1 w-96 border p-3 shadow-lg"
@@ -179,8 +179,8 @@
               <div class="text-xs font-semibold text-base-content/70 mb-2">
                 Calendar Sources
               </div>
-              {#each query.url as url, i (i)}
-                <div class="flex gap-2">
+              {#each query.urls as url, i (i)}
+                <div class="flex gap-2 items-center">
                   <div class="flex-1">
                     <input
                       placeholder="https://calendar.example.com/feed.ics"
@@ -190,11 +190,11 @@
                       class="input input-xs input-bordered w-full"
                     />
                   </div>
-                  {#if query.url.length > 1}
+                  {#if query.urls.length > 1}
                     <button
                       type="button"
                       class="btn btn-xs btn-square btn-ghost"
-                      onclick={() =>                         updateEvents({ url: query.url.toSpliced(i, 1) })}
+                      onclick={() =>                         updateEvents({ urls: query.urls.toSpliced(i, 1) })}
                       title="Remove"
                     >
                       <span class="sr-only">Remove</span>
@@ -205,7 +205,7 @@
               {/each}
               <div class="flex gap-2">
                 <div class="flex-1">
-                  {#key query.url}
+                  {#key query.urls}
                     <input
                       placeholder="https://calendar.example.com/feed.ics"
                       type="url"
