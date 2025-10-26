@@ -22,6 +22,7 @@
     SquaresIcon,
   } from '$lib/components/icons.svelte'
     import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
+    import DetailsWithFocusOut from '$lib/components/DetailsWithFocusOut.svelte'
 
   const { data }: PageProps = $props()
   const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
@@ -55,8 +56,6 @@
     }),
   }
 
-  let showCalendar = $state(false)
-
   let formEl: HTMLFormElement
   let calendarEl: HTMLElement
 
@@ -64,7 +63,6 @@
     calendarEl.addEventListener('change', (e) => {
       // @ts-expect-error event is not well typed
       const [from, to] = e.target!.value.split('/')
-      showCalendar = false
       updateEvents({ from, to })
     })
   })
@@ -111,7 +109,7 @@
           navigator.clipboard.writeText(page.url.toString())}
         class="btn">Copy URL</button
       >
-      <details class="dropdown max-xl:dropdown-end">
+      <DetailsWithFocusOut class="dropdown max-xl:dropdown-end">
         <summary class="btn gap-2">
           Export
           {@render ChevronDownIcon({ class: 'size-4' })}
@@ -148,7 +146,7 @@
             </a>
           </li>
         </ul>
-      </details>
+      </DetailsWithFocusOut>
       <button
         onclick={() => toggleBookmark(page.url.toString())}
         class="btn"
@@ -170,7 +168,7 @@
     data-sveltekit-noscroll
   >
     <div class="flex items-center gap-4">
-        <details class="dropdown">
+        <DetailsWithFocusOut class="dropdown">
           <summary class="input w-auto cursor-pointer">
             {query.url.length} Calendar{query.url.length === 1 ? '' : 's'}
           </summary>
@@ -227,9 +225,9 @@
               </div>
             </div>
           </div>
-        </details>
+        </DetailsWithFocusOut>
 
-      <details class="dropdown" open={showCalendar}>
+      <details class="dropdown">
         <summary class="input w-auto cursor-pointer">
           <span class="label">Dates</span>
           <span
