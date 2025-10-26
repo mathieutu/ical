@@ -5,11 +5,9 @@
   import { endOfMonth, startOfMonth, subMonths } from 'date-fns'
   import { formatDateIso } from '$lib/utils/date.js'
   import { formatCurrency } from '$lib/utils/number.js'
-  import { buildUrlWithParams } from '$lib/utils/url.js'
   import 'cally'
   import { onMount } from 'svelte'
   import { goto } from '$app/navigation'
-  import type { SearchParam } from '../json/+server'
   import { useBookmarks } from '$lib/utils/bookmarks.svelte'
   import {
     CalendarIcon,
@@ -20,7 +18,10 @@
     TableCellsIcon,
     CodeBracketIcon,
     ChevronDownIcon,
+    XMarkIcon,
+    SquaresIcon,
   } from '$lib/components/icons.svelte'
+    import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
 
   const { data }: PageProps = $props()
   const { events, stats, query, ...calendar } = $derived(data)
@@ -29,13 +30,19 @@
 
   const bookmarked = $derived(isBookmarked(page.url.toString()))
 
-  const replaceSearchParams = (
-    newSearchParams: Partial<Record<SearchParam, string | null>>
-  ) =>
+  const replaceSearchParams = (    newSearchParams: Partial<QueryParams>  ): string =>
     buildUrlWithParams(page.url.pathname, page.url, {
       ...query,
       ...newSearchParams,
     })
+
+    const updateEvents = (newSearchParams: Partial<QueryParams>): Promise<void> =>
+      goto(
+        buildUrlWithParams(page.url.pathname, page.url, {
+          ...query,
+          ...newSearchParams,
+        })
+      )
 
   const calendarPresets = {
     'Last Month': replaceSearchParams({
@@ -55,9 +62,10 @@
 
   onMount(() => {
     calendarEl.addEventListener('change', (e) => {
+      // @ts-expect-error event is not well typed
       const [from, to] = e.target!.value.split('/')
       showCalendar = false
-      goto(replaceSearchParams({ from, to }))
+      updateEvents({ from, to })
     })
   })
 </script>
@@ -146,14 +154,72 @@
     </div>
   </div>
   <form
-    method="GET"
     bind:this={formEl}
     data-sveltekit-keepfocus
     data-sveltekit-noscroll
   >
     <div class="flex items-center gap-4">
+        <details class="dropdown">
+          <summary class="input w-auto cursor-pointer">
+            {query.url.length} Calendar{query.url.length === 1 ? '' : 's'}
+          </summary>
+          <div
+            class="dropdown-content bg-base-100 rounded-box border-base-300 z-[1] mt-1 w-96 border p-3 shadow-lg"
+          >
+            <div class="space-y-2">
+              <div class="text-xs font-semibold text-base-content/70 mb-2">
+                Calendar Sources
+              </div>
+              {#each query.url as url, i (i)}
+                <div class="flex gap-2">
+                  <div class="flex-1">
+                    <input
+                      placeholder="https://calendar.example.com/feed.ics"
+                      value={url}
+                      type="url"
+                      name="url"
+                      class="input input-xs input-bordered w-full"
+                    />
+                  </div>
+                  {#if query.url.length > 1}
+                    <button
+                      type="button"
+                      class="btn btn-xs btn-square btn-ghost"
+                      onclick={() =>                         updateEvents({ url: query.url.toSpliced(i, 1) })}
+                      title="Remove"
+                    >
+                      <span class="sr-only">Remove</span>
+                      {@render XMarkIcon({ class: 'size-4' })}
+                    </button>
+                  {/if}
+                </div>
+              {/each}
+              <div class="flex gap-2">
+                <div class="flex-1">
+                  {#key query.url}
+                    <input
+                      placeholder="https://calendar.example.com/feed.ics"
+                      type="url"
+                      name="url"
+                      class="input input-xs input-bordered w-full"
+                    />
+                  {/key}
+                </div>
+              </div>
+              <div class="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  class="btn btn-soft btn-xs"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </details>
+
       <details class="dropdown" open={showCalendar}>
-        <summary class="input w-auto">
+        <summary class="input w-auto cursor-pointer">
           <span class="label">Dates</span>
           <span
             >{query.from || stats.earliestStart?.split(' ')[0]}
@@ -259,7 +325,6 @@
           <option value="month">Month</option>
         </select>
       </label>
-      <input type="hidden" name="url" value={query.url} />
     </div>
     {#if stats.totalEventsCount && stats.filteredEventsCount !== undefined}
       <div class="mt-1 flex items-center justify-between gap-4">
@@ -294,7 +359,7 @@
         </label>
       </div>
     {/if}
-  </form>
+    </form>
 
   <div
     class="card bg-base-100 border-base-300 border text-sm shadow-md

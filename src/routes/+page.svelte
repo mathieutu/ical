@@ -23,7 +23,11 @@
   let mergeUrlToLink = $derived([...mergeUrl.filter(Boolean)])
   let mergeFinalUrl = $derived.by(() => {
     if (!mergeUrlToLink.length) return ''
-    return buildUrlWithParams('merge', page.url, { url: mergeUrlToLink })
+    return buildUrlWithParams('analyse', page.url, { url: mergeUrlToLink })
+  })
+  let mergeIcsUrl = $derived.by(() => {
+    if (!mergeUrlToLink.length) return ''
+    return buildUrlWithParams('ics', page.url, { url: mergeUrlToLink })
   })
 
   let singleUrl: string = $state('')
@@ -363,7 +367,7 @@
                       <div class="mt-2"><strong>Generated URL:</strong></div>
                       <div class="pl-2 font-mono text-[10px] break-all">
                         {window.location
-                          .origin}/merge?url=https://calendar.google.com/...&url=https://outlook.office365.com/...&url=https://calendar.google.com/...
+                          .origin}/ics?url=https://calendar.google.com/...&url=https://outlook.office365.com/...&url=https://calendar.google.com/...
                       </div>
                       <div class="mt-2">
                         <strong>Result:</strong> One unified calendar showing all
@@ -380,10 +384,10 @@
                   >
                   <div class="mt-2 space-y-2 text-xs">
                     <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">1. Copy the URL</div>
+                      <div class="mb-1 font-semibold">1. Copy the ICS URL</div>
                       <div class="opacity-70">
-                        After adding your calendar URLs, click "Copy Merged
-                        Calendar URL" to get your unique merge URL.
+                        After adding your calendar URLs, click "Copy ICS URL"
+                        to get your unique merged calendar URL.
                       </div>
                     </div>
                     <div class="bg-base-300 rounded p-2">
@@ -393,15 +397,15 @@
                       <div class="space-y-1 opacity-70">
                         <div>
                           <strong>Google Calendar:</strong> Settings → Add calendar
-                          → From URL → Paste your merge URL
+                          → From URL → Paste your ICS URL
                         </div>
                         <div>
                           <strong>Apple Calendar:</strong> File → New Calendar Subscription
-                          → Paste your merge URL
+                          → Paste your ICS URL
                         </div>
                         <div>
                           <strong>Outlook:</strong> Add calendar → Subscribe from
-                          web → Paste your merge URL
+                          web → Paste your ICS URL
                         </div>
                       </div>
                     </div>
@@ -454,14 +458,22 @@
                   {@render BookmarkIcon({ class: 'size-5' })}
                   Bookmark
                 </button>
+                <a
+                  href={mergeFinalUrl}
+                  class="btn btn-primary btn-sm gap-2"
+                  title="Analyze merged calendars"
+                >
+                  {@render ChartBarIcon({ class: 'size-5' })}
+                  Analyze Merged Calendars
+                </a>
                 <button
                   type="button"
-                  onclick={() => navigator.clipboard.writeText(mergeFinalUrl)}
+                  onclick={() => navigator.clipboard.writeText(mergeIcsUrl)}
                   class="btn btn-primary btn-sm btn-soft gap-2"
                   title="Copy Merged Calendar URL"
                 >
                   {@render CopyIcon({ class: 'size-5' })}
-                  Copy Merged Calendar URL
+                  Copy ICS URL
                 </button>
               </div>
             {/if}

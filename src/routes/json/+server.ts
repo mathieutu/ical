@@ -18,15 +18,7 @@ import {
 } from 'date-fns'
 import { searchByWord } from '$lib/utils/strings'
 import { strictDifferenceInHours } from '$lib/utils/date'
-
-export type SearchParam =
-  | 'url'
-  | 'from'
-  | 'to'
-  | 'summary'
-  | 'sort'
-  | 'grouped'
-  | 'hourlyRate'
+import { getQueryParams, type QueryParams } from '$lib/utils/searchParams'
 
 export type AugmentedEvent = Event & { totalHours: number; amount?: number }
 
@@ -40,7 +32,7 @@ export type JsonResponse = Omit<Calendar, 'events'> & {
     earliestStart?: string
     latestEnd?: string
   }
-  query: Record<SearchParam, string | null>
+  query: QueryParams
 }
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -48,26 +40,39 @@ export const GET: RequestHandler = async ({ url }) => {
     return redirect(303, '/?tab=json')
   }
 
-  const icalUrl = url.searchParams.get('url')
-  const from = url.searchParams.get('from')
-  const to = url.searchParams.get('to')
-  const summary = url.searchParams.get('summary')
-  const sort = url.searchParams.get('sort') || 'date-asc'
-  const grouped = url.searchParams.get('grouped')
-  const hourlyRate = url.searchParams.get('hourlyRate')
+  const query = getQueryParams(url.searchParams)
 
-  if (!icalUrl?.length) {
+  if (!query.url.length) {
     return error(400, 'No URL provided')
   }
 
-  const calendar: ICAL.Component = await fetchCalendar(icalUrl).catch(
-    (e: Error) => error(400, e.message)
-  )
-  const calendarJson = parseCalendar(calendar)
+  // Fetch and parse all calendars
+  const calendars: ICAL.Component[] = await Promise.all(
+    query.url.map(fetchCalendar)
+  ).catch((e: Error) => error(400, e.message))
+
+  const parsedCalendars = calendars.map(parseCalendar)
+
+  // Merge all events from all calendars
+  const allEvents = parsedCalendars.flatMap((cal) => cal.events)
+
+  // Use the first calendar's metadata, or merge names if multiple
+  const calendarJson = {
+    ...parsedCalendars[0],
+    name:
+      parsedCalendars.length > 1
+        ? parsedCalendars
+            .map((cal) => cal.name)
+            .filter(Boolean)
+            .join(' & ')
+        : parsedCalendars[0].name,
+    events: allEvents,
+  }
+
   const totalEventsCount = calendarJson.events.length
 
-  const fromDate = from ? startOfDay(from) : null
-  const toDate = to ? endOfDay(to) : null
+  const fromDate = query.from ? startOfDay(query.from) : null
+  const toDate = query.to ? endOfDay(query.to) : null
 
   const sortedEvents = calendarJson.events
     .filter((event) => {
@@ -75,12 +80,14 @@ export const GET: RequestHandler = async ({ url }) => {
         fromDate && event.start ? date(event.start) >= fromDate : true
       const matchesTo = toDate && event.end ? date(event.end) <= toDate : true
       const matchesSummary =
-        summary && event.summary ? searchByWord(summary, event.summary) : true
+        query.summary && event.summary ? searchByWord(query.summary, event.summary) : true
 
       return matchesFrom && matchesTo && matchesSummary
     })
     .sort((a, b) => {
-      const [field, order] = sort.split('-')
+      if  (!query.sort) return 0
+    
+      const [field, order] = query.sort.split('-')
 
       const handleOrder = (value: number) =>
         order === 'desc' ? value * -1 : value
@@ -161,11 +168,11 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   const groupEvents = (events: Event[]): AugmentedEvent[] => {
-    if (grouped === 'month') {
+    if (query.grouped === 'month') {
       return groupByMonth(events)
     }
 
-    if (grouped === 'summary') {
+    if (query.grouped === 'summary') {
       return groupBySummary(events)
     }
 
@@ -177,8 +184,8 @@ export const GET: RequestHandler = async ({ url }) => {
 
   const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents).map(
     (ev) => {
-      if (hourlyRate) {
-        const rate = parseFloat(hourlyRate)
+      if (query.hourlyRate) {
+        const rate = parseFloat(query.hourlyRate)
         if (!isNaN(rate)) {
           return {
             ...ev,
@@ -229,14 +236,6 @@ export const GET: RequestHandler = async ({ url }) => {
       earliestStart,
       latestEnd,
     },
-    query: {
-      url: icalUrl,
-      from,
-      to,
-      summary,
-      sort,
-      grouped,
-      hourlyRate,
-    },
+    query,
   } satisfies JsonResponse)
 }
