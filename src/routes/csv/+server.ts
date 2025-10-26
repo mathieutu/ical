@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types'
-import type { Response } from '../json/+server'
+import type { JsonResponse } from '../json/+server'
 import { format, toDate as date } from 'date-fns'
 import { redirect } from '@sveltejs/kit'
 
@@ -10,7 +10,7 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 
   // Fetch data from the JSON route
   const res = await fetch(`/json?${url.searchParams.toString()}`)
-  const calendar: Response = await res.json()
+  const calendar: JsonResponse = await res.json()
 
   const { events, stats } = calendar
 

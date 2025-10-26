@@ -267,7 +267,7 @@
     fill="none"
     viewBox="0 0 24 24"
     stroke-width="1.5"
-    stroke="#4f46e5"
+    stroke="currentColor"
   >
     <path
       stroke-linecap="round"

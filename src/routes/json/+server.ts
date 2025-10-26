@@ -30,7 +30,7 @@ export type SearchParam =
 
 export type AugmentedEvent = Event & { totalHours: number; amount?: number }
 
-export type Response = Omit<Calendar, 'events'> & {
+export type JsonResponse = Omit<Calendar, 'events'> & {
   events: AugmentedEvent[]
   stats: {
     totalEventsCount?: number
@@ -238,5 +238,5 @@ export const GET: RequestHandler = async ({ url }) => {
       grouped,
       hourlyRate,
     },
-  } satisfies Response)
+  } satisfies JsonResponse)
 }

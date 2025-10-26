@@ -1,5 +1,5 @@
 import type { PageLoad } from './$types'
-import type { Response } from '../json/+server'
+import type { JsonResponse } from '../json/+server'
 import { formatDateIso } from '$lib/utils/date'
 import { redirect } from '@sveltejs/kit'
 
@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ fetch, url }) => {
   }
 
   const res = await fetch(`/json?${url.searchParams.toString()}`)
-  const calendar: Response = await res.json()
+  const calendar: JsonResponse = await res.json()
 
   return {
     ...calendar,

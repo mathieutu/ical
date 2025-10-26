@@ -89,7 +89,7 @@
       <a href="/" class="btn">← Back</a>
       <button
         onclick={() =>
-          navigator.clipboard.writeText(window.location.toString())}
+          navigator.clipboard.writeText(page.url.toString())}
         class="btn">Copy URL</button
       >
       <details class="dropdown max-xl:dropdown-end">
@@ -100,6 +100,18 @@
         <ul
           class="dropdown-content menu bg-base-100 rounded-box border-base-300 z-[1] mt-1 w-52 border p-2 shadow-lg"
         >
+          <li>
+            <button
+              onclick={() => {
+                const calendarUrl = `${page.url.origin}/ics?${page.url.searchParams.toString()}`
+                navigator.clipboard.writeText(calendarUrl)
+              }}
+              class="gap-2"
+            >
+              {@render CalendarIcon({ class: 'size-5' })}
+              Copy calendar URL
+            </button>
+          </li>
           <li>
             <a href="/csv?{page.url.searchParams.toString()}" class="gap-2">
               {@render TableCellsIcon({ class: 'size-5' })}
@@ -169,7 +181,6 @@
               value="{query.from}/{query.to}"
               class="cally justify-center"
               months={2}
-              onchange={console.log}
               bind:this={calendarEl}
             >
               <span slot="previous"

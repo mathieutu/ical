@@ -23,3 +23,6 @@ export const strictDifferenceInHours = (
 
 export const formatDateIso = (date: DateArg<Date>) =>
   formatISO(date, { representation: 'date' })
+
+export const formatDateTimeIso = (date: DateArg<Date>) =>
+  formatISO(date)
