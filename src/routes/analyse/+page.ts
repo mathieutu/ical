@@ -2,11 +2,12 @@ import type { PageLoad } from './$types'
 import type { JsonResponse } from '../json/+server'
 import { formatDateIso } from '$lib/utils/date'
 import { redirect } from '@sveltejs/kit'
-import { cleanSearchParams } from '$lib/utils/searchParams'
+import { cleanSearchParams, getQueryParams } from '$lib/utils/searchParams'
+import { endOfMonth, startOfMonth } from 'date-fns'
 
 export const ssr = false
 
-export const load: PageLoad = async ({ fetch, url }) => {
+export const load: PageLoad = async ({ fetch, url })  => {
   if (!url.searchParams.get('url')) {
     return redirect(303, '/?tab=analyse')
   }
@@ -17,26 +18,36 @@ export const load: PageLoad = async ({ fetch, url }) => {
     return redirect(303, `/analyse?${searchParams.toString()}`)
   }
 
-  const res = await fetch(`/json?${searchParams.toString()}`)
+    const res = await fetch(`/json?${searchParams.toString()}`)
 
-  if (!res.ok) {
-    // TODO handle error properly
-    throw new Error(`Failed to load calendar data: ${res.statusText}`)
-  }
+    if (!res.ok) {
+      return {
+        name: 'Error',
+        events: [],
+        stats: {
+          totalEventsCount: 0,
+          filteredEventsCount: 0,
+          totalHours: 0,
+          totalAmount: undefined,
+          earliestStart: formatDateIso(startOfMonth(new Date())),
+          latestEnd: formatDateIso(endOfMonth(new Date())),
+        },
+        query: getQueryParams(url.searchParams),
+        error: `Failed to load calendar: ${res.status} ${res.statusText}`,
+        errorDetails: (await res.json()).message,
+      }
+    }
 
-  const calendar: JsonResponse = await res.json()
+    const calendar: JsonResponse = await res.json()
 
-  // const newSearchParams = new URLSearchParams(calendar.query).toString()
-
-  // if (newSearchParams !== url.searchParams.toString()) {
-  //   return redirect(303, `/analyse?${new URLSearchParams(calendar.query).toString()}`)
-  // }
-  return {
-    ...calendar,
-    events: calendar.events.map((event) => ({
-      ...event,
-      start: formatDateIso(event.start),
-      end: formatDateIso(event.end),
-    })),
-  }
+    return {
+      ...calendar,
+      events: calendar.events.map((event) => ({
+        ...event,
+        start: formatDateIso(event.start),
+        end: formatDateIso(event.end),
+      })),
+      error: null,
+      errorDetails: null,
+    }
 }

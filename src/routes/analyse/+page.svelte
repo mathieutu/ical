@@ -24,7 +24,7 @@
     import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
 
   const { data }: PageProps = $props()
-  const { events, stats, query, ...calendar } = $derived(data)
+  const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
 
   const { toggleBookmark, isBookmarked } = useBookmarks()
 
@@ -84,6 +84,17 @@
       href="https://www.mathieutu.dev">@mathieutu</a
     >
   </div>
+
+  {#if error}
+    <div role="alert" class="alert alert-error">
+      <div>
+        <div class="font-bold">{error}</div>
+        {#if errorDetails}
+          <div class="text-sm">{errorDetails}</div>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
   <div class="flex items-center justify-between">
     <h2

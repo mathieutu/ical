@@ -1,4 +1,4 @@
-import { error, json, redirect } from '@sveltejs/kit'
+import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import ICAL from 'ical.js'
 import {
@@ -35,11 +35,7 @@ export type JsonResponse = Omit<Calendar, 'events'> & {
   query: QueryParams
 }
 
-export const GET: RequestHandler = async ({ url }) => {
-  if (!url.searchParams.get('url')) {
-    return redirect(303, '/?tab=json')
-  }
-
+export const GET: RequestHandler = async ({ url,  }) => {
   const query = getQueryParams(url.searchParams)
 
   if (!query.url.length) {
