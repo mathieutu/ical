@@ -20,7 +20,12 @@
     ChevronDownIcon,
     XMarkIcon,
   } from '$lib/components/icons.svelte'
-  import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
+  import {
+    buildUrlWithParams,
+    cleanSearchParams,
+    getQueryParams,
+    type QueryParams,
+  } from '$lib/utils/searchParams'
 
   const { data }: PageProps = $props()
   const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
@@ -40,7 +45,8 @@
       buildUrlWithParams(page.url.pathname, page.url, {
         ...query,
         ...newSearchParams,
-      })
+      }),
+      { keepFocus: true, noScroll: true }
     )
 
   const calendarPresets = {
@@ -64,6 +70,17 @@
       updateEvents({ from, to })
     })
   })
+
+  const updateFiltersFromForm = () => {
+    // @ts-expect-error Works perfectly!
+    const queryParams = getQueryParams(new URLSearchParams(new FormData(formEl)))
+    updateEvents(queryParams)
+  }
+
+  const handleSubmit = (e: Event) => {
+    e.preventDefault()
+    updateFiltersFromForm()
+  }
 </script>
 
 <svelte:head>
@@ -141,7 +158,10 @@
       </div>
 
       <!-- Filters in Header -->
-      <form bind:this={formEl} data-sveltekit-keepfocus data-sveltekit-noscroll>
+      <form
+        bind:this={formEl}
+        onsubmit={handleSubmit}
+      >
         <div class="flex flex-wrap items-center gap-2">
           <div>
             <details class="dropdown">
@@ -215,7 +235,12 @@
                 </div>
 
                 <div class="flex justify-center">
-                  <calendar-range class="cally" value="{query.from}/{query.to}" months={2} bind:this={calendarEl}>
+                  <calendar-range
+                    class="cally"
+                    value="{query.from}/{query.to}"
+                    months={2}
+                    bind:this={calendarEl}
+                  >
                     <span slot="previous"
                       >{@render ChevronLeftIcon({
                         class: 'size-4 fill-current',
@@ -239,7 +264,7 @@
                       type="date"
                       name="from"
                       value={query.from}
-                      onchange={() => formEl.requestSubmit()}
+                      onchange={updateFiltersFromForm}
                     />
                   </label>
                   <label class="input input-xs">
@@ -248,7 +273,7 @@
                       type="date"
                       name="to"
                       value={query.to}
-                      onchange={() => formEl.requestSubmit()}
+                      onchange={updateFiltersFromForm}
                     />
                   </label>
                 </div>
@@ -261,7 +286,7 @@
                 type="text"
                 name="summary"
                 value={query.summary}
-                oninput={debounce(() => formEl.requestSubmit(), 300)}
+                oninput={debounce(updateFiltersFromForm, 300)}
               />
               {#if query.summary}
                 <a
@@ -274,7 +299,7 @@
           <div>
             <label class="select select-sm w-auto">
               <span class="label">Sort</span>
-              <select name="sort" value={query.sort} onchange={() => formEl.requestSubmit()}>
+              <select name="sort" value={query.sort} onchange={updateFiltersFromForm}>
                 <option value="date-asc">Date ↑</option>
                 <option value="date-desc">Date ↓</option>
                 <option value="summary-asc">Summary ↑</option>
@@ -287,7 +312,7 @@
               <select
                 name="grouped"
                 value={query.grouped || ''}
-                onchange={() => formEl.requestSubmit()}
+                onchange={updateFiltersFromForm}
               >
                 <option value="">No grouping</option>
                 <option value="summary">Summary</option>
@@ -305,7 +330,7 @@
                 class="w-16"
                 name="hourlyRate"
                 value={query.hourlyRate || ''}
-                oninput={debounce(() => formEl.requestSubmit(), 300)}
+                oninput={debounce(updateFiltersFromForm, 300)}
               />
               <span class="label text-base-content/50">€/h</span>
             </label>

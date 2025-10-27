@@ -13,7 +13,7 @@ export const searchByWord = (needle: string, haystack: string) => {
     .some((orTerm) => {
       const words = orTerm.trim().split(' ')
       const includeWords = words.filter((word) => !word.startsWith('-'))
-      const excludeWords = words.filter((word) => word.startsWith('-')).map((word) => word.slice(1))
+      const excludeWords = words.filter((word) => word.startsWith('-')).map((word) => word.slice(1)).filter(Boolean)
 
       const matchesIncludes = includeWords.every((word) =>
         haystackWords.some((hay) => hay.startsWith(word))
