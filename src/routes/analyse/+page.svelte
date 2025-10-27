@@ -24,9 +24,9 @@
   const { data }: PageProps = $props()
   const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
 
-  const { toggleBookmark, isBookmarked } = useBookmarks()
+  const bookmarks = useBookmarks()
 
-  const bookmarked = $derived(isBookmarked(page.url.toString()))
+  const bookmarked = $derived(bookmarks.isBookmarked(page.url.toString()))
 
   const replaceSearchParams = (newSearchParams: Partial<QueryParams>): string =>
     buildUrlWithParams(page.url.pathname, page.url, {
@@ -138,14 +138,15 @@
             </ul>
           </details>
           <button
-            onclick={() => toggleBookmark(page.url.toString())}
+            onclick={() => bookmarks.toggle(page.url.toString())}
             class="btn btn-ghost btn-sm"
-            title={bookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
           >
             {#if bookmarked}
               {@render BookmarkSlashIcon({ class: 'size-5' })}
+              Remove from bookmarks
             {:else}
               {@render BookmarkIcon({ class: 'size-5' })}
+              Bookmark
             {/if}
           </button>
         </div>

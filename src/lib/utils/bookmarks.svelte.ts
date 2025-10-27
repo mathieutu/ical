@@ -18,7 +18,7 @@ export const useBookmarks = () => {
     return !!bookmarkedUrls[url]
   }
 
-  const addBookmark = (url: string) => {
+  const add = (url: string) => {
     if (bookmarkedUrls[url]) {
       return
     }
@@ -30,23 +30,25 @@ export const useBookmarks = () => {
     }
   }
 
-  const removeBookmark = (url: string) => {
+  const remove = (url: string) => {
     delete bookmarkedUrls[url]
   }
 
-  const toggleBookmark = (url: string) => {
+  const toggle = (url: string) => {
     if (bookmarkedUrls[url]) {
-      return removeBookmark(url)
+      return remove(url)
     }
 
-    return addBookmark(url)
+    return add(url)
   }
 
   return {
-    bookmarkedUrls,
+    get urls() {
+      return bookmarkedUrls
+    },
     isBookmarked,
-    addBookmark,
-    removeBookmark,
-    toggleBookmark,
+    add,
+    remove,
+    toggle,
   }
 }

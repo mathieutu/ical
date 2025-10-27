@@ -15,7 +15,7 @@
   let calendarUrls: string[] = $state([])
   let validUrls = $derived(calendarUrls.filter((url) => url.trim()))
 
-  const { bookmarkedUrls, removeBookmark } = useBookmarks()
+  const bookmarks = useBookmarks()
 
   const removeUrlField = (index: number) => {
     calendarUrls = calendarUrls.filter((_, i) => i !== index)
@@ -63,12 +63,12 @@
 
   <div class="container mx-auto max-w-4xl px-4 py-8">
     <!-- Bookmarks Section -->
-    {#if Object.keys(bookmarkedUrls).length}
+    {#if Object.keys(bookmarks.urls).length}
       <details class="mb-8 [&[open]_.transition-transform]:rotate-180">
         <summary class="btn btn-ghost mb-4 gap-2">
           {@render BookmarkIcon({ class: 'size-5' })}
           <span class="font-semibold">Bookmarks</span>
-          <span class="badge badge-primary">{Object.keys(bookmarkedUrls).length}</span>
+          <span class="badge badge-primary">{Object.keys(bookmarks.urls).length}</span>
           {@render ChevronDownIcon({
             class: `size-4 transition-transform`,
           })}
@@ -83,8 +83,8 @@
             </div>
 
             <div class="grid gap-3">
-              {#each Object.entries(bookmarkedUrls) as [url, name] (url)}
-                <BookmarkCard {url} {name} onRemove={() => removeBookmark(url)} />
+              {#each Object.entries(bookmarks.urls) as [url, name] (url)}
+                <BookmarkCard {url} {name} onRemove={() => bookmarks.remove(url)} />
               {/each}
             </div>
           </div>
