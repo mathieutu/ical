@@ -12,11 +12,10 @@ export type QueryParams = {
 
 export type SearchParam = keyof QueryParams
 
-export const getQueryParams = (url: string | URLSearchParams): QueryParams => {
+export const getQueryParams = (url: string | URLSearchParams, filterEmptyValues = true): QueryParams => {
   const searchParams = new URLSearchParams(url)
 
-  return Object.fromEntries(
-    [
+  const entries = [
       ['urls', uniq(searchParams.getAll('urls'))],
       ['from', searchParams.get('from')],
       ['to', searchParams.get('to')],
@@ -24,8 +23,13 @@ export const getQueryParams = (url: string | URLSearchParams): QueryParams => {
       ['sort', searchParams.get('sort') as QueryParams['sort']],
       ['grouped', searchParams.get('grouped') as QueryParams['grouped']],
       ['hourlyRate', searchParams.get('hourlyRate')],
-    ].filter(([, value]) => value)
-  )
+    ]
+  
+    if (filterEmptyValues) {
+      return Object.fromEntries(entries.filter(([, value]) => value))
+    }
+
+    return Object.fromEntries(entries)
 }
 
 export const buildSearchParams = (params: QueryParams): URLSearchParams => {

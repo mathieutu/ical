@@ -67,7 +67,7 @@
 
   const updateFiltersFromForm = () => {
     // @ts-expect-error Works perfectly!
-    const queryParams = getQueryParams(new URLSearchParams(new FormData(formEl)))
+    const queryParams = getQueryParams(new URLSearchParams(new FormData(formEl)), false)
     updateEvents(queryParams)
   }
 
@@ -277,7 +277,7 @@
               <input
                 type="text"
                 name="summary"
-                placeholder="ClientDoe -daily"
+                placeholder="my project -daily"
                 value={query.summary}
                 oninput={debounce(updateFiltersFromForm, 300)}
               />
@@ -343,7 +343,7 @@
   {/if}
 
   <!-- Stats Bar -->
-  {#if stats.totalEventsCount && stats.filteredEventsCount !== undefined}
+  {#if stats.totalEventsCount && stats.filteredEventsCount}
     <div class="bg-base-100 border-base-300 border-b">
       <div class="container mx-auto max-w-6xl px-4 py-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -389,69 +389,133 @@
   <!-- Events List -->
   <div class="">
     <div class="container mx-auto max-w-6xl">
-      <ul class="list">
-        {#each events as event, i (i)}
-          <li class="list-row group hover:bg-base-200/50 transition-colors">
-            <div class="list-col-grow px-4">
-              <div class="mb-1 flex items-start justify-between gap-4">
-                <div
-                  class="text-base-content group-hover:text-primary font-semibold transition-colors"
-                >
-                  {event.summary}
-                </div>
-                <div class="flex shrink-0 items-center gap-2">
+      {#if events.length > 0}
+        <ul class="list">
+          {#each events as event, i (i)}
+            <li class="list-row group hover:bg-base-200/50 transition-colors">
+              <div class="list-col-grow px-4">
+                <div class="mb-1 flex items-start justify-between gap-4">
                   <div
-                    class="bg-secondary/10 text-secondary rounded px-2 py-0.5 text-xs font-medium"
+                    class="text-base-content group-hover:text-primary font-semibold transition-colors"
                   >
-                    {event.totalHours}h
+                    {event.summary}
                   </div>
-                  {#if event.amount}
-                    <div class="bg-accent/10 text-accent rounded px-2 py-0.5 text-xs font-semibold">
-                      {formatCurrency(event.amount)}
+                  <div class="flex shrink-0 items-center gap-2">
+                    <div
+                      class="bg-secondary/10 text-secondary rounded px-2 py-0.5 text-xs font-medium"
+                    >
+                      {event.totalHours}h
                     </div>
-                  {/if}
+                    {#if event.amount}
+                      <div
+                        class="bg-accent/10 text-accent rounded px-2 py-0.5 text-xs font-semibold"
+                      >
+                        {formatCurrency(event.amount)}
+                      </div>
+                    {/if}
+                  </div>
                 </div>
-              </div>
-              <div class="text-base-content/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                <span class="inline-flex items-center gap-1">
-                  <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    ></path>
-                  </svg>
-                  {event.start}
-                  {#if event.start !== event.end}
-                    <span class="text-base-content/40">→</span>
-                    {event.end}
-                  {/if}
-                </span>
-                {#if event.location}
+                <div
+                  class="text-base-content/60 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs"
+                >
                   <span class="inline-flex items-center gap-1">
                     <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      ></path>
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       ></path>
                     </svg>
-                    {event.location}
+                    {event.start}
+                    {#if event.start !== event.end}
+                      <span class="text-base-content/40">→</span>
+                      {event.end}
+                    {/if}
                   </span>
-                {/if}
+                  {#if event.location}
+                    <span class="inline-flex items-center gap-1">
+                      <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        ></path>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                      {event.location}
+                    </span>
+                  {/if}
+                </div>
               </div>
-            </div>
-          </li>
-        {/each}
-      </ul>
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <div class="px-4 py-16 text-center">
+          <div class="mx-auto max-w-md">
+            {#if stats.totalEventsCount === 0}
+              <!-- No events in calendar at all -->
+              <div class="text-base-content/40 mb-4">
+                <svg
+                  class="mx-auto size-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-base-content mb-2 text-lg font-semibold">No events in calendar</h3>
+              <p class="text-base-content/60 text-sm">
+                {query.urls.length > 1 ? 'These calendars don\'t' : 'This calendar doesn\'t'} contain any events yet. Check back later or verify the
+                calendar{query.urls.length > 1 ? 's URLs are' : ' URL is'} correct.
+              </p>
+            {:else}
+              <!-- Filters too strict -->
+              <div class="text-warning/40 mb-4">
+                <svg
+                  class="mx-auto size-16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  ></path>
+                </svg>
+              </div>
+              <h3 class="text-base-content mb-2 text-lg font-semibold">
+                No events match your filters
+              </h3>
+              <p class="text-base-content/60 mb-4 text-sm">
+                  Your filters don't match any of the {stats.totalEventsCount}
+                  events in {query.urls.length > 1 ? 'these calendars' : 'this calendar'}.
+              </p>
+              <a
+                href={replaceSearchParams({ summary: '', from: '', to: '' })}
+                class="btn btn-primary btn-sm"
+              >
+                Clear all filters
+              </a>
+            {/if}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
