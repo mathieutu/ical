@@ -399,7 +399,7 @@
                   bind:value={calendarUrls[i]}
                   name="urls"
                   type="url"
-                  class="input input-bordered w-full"
+                  class=""
                   placeholder="https://calendar.example.com/feed{i ? `_${i + 1}` : ''}.ics"
                   required={i === 0}
                   aria-label="Calendar feed URL {i + 1}"
