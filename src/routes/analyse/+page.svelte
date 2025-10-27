@@ -18,14 +18,8 @@
     TableCellsIcon,
     CodeBracketIcon,
     ChevronDownIcon,
-    XMarkIcon,
   } from '$lib/components/icons.svelte'
-  import {
-    buildUrlWithParams,
-    cleanSearchParams,
-    getQueryParams,
-    type QueryParams,
-  } from '$lib/utils/searchParams'
+  import { buildUrlWithParams, getQueryParams, type QueryParams } from '$lib/utils/searchParams'
 
   const { data }: PageProps = $props()
   const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
@@ -158,10 +152,7 @@
       </div>
 
       <!-- Filters in Header -->
-      <form
-        bind:this={formEl}
-        onsubmit={handleSubmit}
-      >
+      <form bind:this={formEl} onsubmit={handleSubmit}>
         <div class="flex flex-wrap items-center gap-2">
           <div>
             <details class="dropdown">
@@ -285,6 +276,7 @@
               <input
                 type="text"
                 name="summary"
+                placeholder="ClientDoe -daily"
                 value={query.summary}
                 oninput={debounce(updateFiltersFromForm, 300)}
               />
@@ -309,11 +301,7 @@
 
             <label class="select select-sm w-auto">
               <span class="label">Group by</span>
-              <select
-                name="grouped"
-                value={query.grouped || ''}
-                onchange={updateFiltersFromForm}
-              >
+              <select name="grouped" value={query.grouped || ''} onchange={updateFiltersFromForm}>
                 <option value="">No grouping</option>
                 <option value="summary">Summary</option>
                 <option value="month">Month</option>

@@ -4,7 +4,7 @@ import ICAL from 'ical.js'
 import { formatDateTimeIso } from '$lib/utils/date'
 
 export const GET = async ({ url, fetch }: RequestEvent) => {
-  if (!url.searchParams.get('url')) {
+  if (!url.searchParams.get('urls')) {
     return redirect(303, '/?tab=ics')
   }
 

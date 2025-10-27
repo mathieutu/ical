@@ -14,15 +14,18 @@ export type SearchParam = keyof QueryParams
 
 export const getQueryParams = (url: string | URLSearchParams): QueryParams => {
   const searchParams = new URLSearchParams(url)
-  return {
-    urls: uniq(searchParams.getAll('urls')),
-    from: searchParams.get('from') || undefined,
-    to: searchParams.get('to') || undefined,
-    summary: searchParams.get('summary') || undefined,
-    sort: (searchParams.get('sort') as QueryParams['sort']) || undefined,
-    grouped: (searchParams.get('grouped') as QueryParams['grouped']) || undefined,
-    hourlyRate: searchParams.get('hourlyRate') || undefined,
-  }
+
+  return Object.fromEntries(
+    [
+      ['urls', uniq(searchParams.getAll('urls'))],
+      ['from', searchParams.get('from')],
+      ['to', searchParams.get('to')],
+      ['summary', searchParams.get('summary')],
+      ['sort', searchParams.get('sort') as QueryParams['sort']],
+      ['grouped', searchParams.get('grouped') as QueryParams['grouped']],
+      ['hourlyRate', searchParams.get('hourlyRate')],
+    ].filter(([, value]) => value)
+  )
 }
 
 export const buildSearchParams = (params: QueryParams): URLSearchParams => {
@@ -48,4 +51,41 @@ export const buildUrlWithParams = (path: string, baseUrl: URL, params: QueryPara
   url.search = buildSearchParams(params).toString()
 
   return url.toString()
+}
+
+export const getParamLabel = (key: SearchParam): string => {
+  return (
+    {
+      from: 'From',
+      to: 'To',
+      summary: 'Filtering with',
+      sort: 'Sorting by',
+      grouped: 'Grouping by',
+      hourlyRate: 'With a rate of',
+      urls: 'URLs',
+    }[key] || key
+  )
+}
+
+export const formatParamValue = (key: SearchParam, value: string): string => {
+  if (key === 'hourlyRate') {
+    return `${value} €/h`
+  }
+
+  if (key === 'sort') {
+    return (
+      {
+        'date-asc': 'Date (oldest first)',
+        'date-desc': 'Date (newest first)',
+        'summary-asc': 'Summary (A-Z)',
+        'summary-desc': 'Summary (Z-A)',
+      }[value] || value
+    )
+  }
+
+  if (key === 'grouped') {
+    return value.charAt(0).toUpperCase() + value.slice(1)
+  }
+
+  return value
 }

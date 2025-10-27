@@ -5,7 +5,6 @@
     ChatIcon,
     BookmarkIcon,
     ChevronDownIcon,
-    XMarkIcon,
     ChartBarIcon,
     LinkIcon,
     LockClosedIcon,
@@ -17,8 +16,6 @@
   let validUrls = $derived(calendarUrls.filter((url) => url.trim()))
 
   const { bookmarkedUrls, removeBookmark } = useBookmarks()
-
-  let showBookmarks = $state(false)
 
   const removeUrlField = (index: number) => {
     calendarUrls = calendarUrls.filter((_, i) => i !== index)
@@ -67,35 +64,32 @@
   <div class="container mx-auto max-w-4xl px-4 py-8">
     <!-- Bookmarks Section -->
     {#if Object.keys(bookmarkedUrls).length}
-      <div class="mb-8">
-        <button onclick={() => (showBookmarks = !showBookmarks)} class="btn btn-ghost mb-4 gap-2">
+      <details class="mb-8 [&[open]_.transition-transform]:rotate-180">
+        <summary class="btn btn-ghost mb-4 gap-2">
           {@render BookmarkIcon({ class: 'size-5' })}
-          <span class="font-semibold">Your Bookmarked Calendars</span>
+          <span class="font-semibold">Bookmarks</span>
           <span class="badge badge-primary">{Object.keys(bookmarkedUrls).length}</span>
           {@render ChevronDownIcon({
-            class: `size-4 transition-transform ${showBookmarks ? 'rotate-180' : ''}`,
+            class: `size-4 transition-transform`,
           })}
-        </button>
+        </summary>
+        <div class="card bg-base-100 border-base-300 border shadow-xl">
+          <div class="card-body p-6">
+            <div class="mb-4">
+              <h3 class="text-base-content mb-1 text-lg font-bold">Saved Calendars</h3>
+              <p class="text-base-content/60 text-sm">
+                Quick access to your bookmarked calendar views
+              </p>
+            </div>
 
-        {#if showBookmarks}
-          <div class="card bg-base-100 border-base-300 border shadow-xl">
-            <div class="card-body p-6">
-              <div class="mb-4">
-                <h3 class="text-base-content mb-1 text-lg font-bold">Saved Calendars</h3>
-                <p class="text-base-content/60 text-sm">
-                  Quick access to your bookmarked calendar views
-                </p>
-              </div>
-
-              <div class="grid gap-3">
-                {#each Object.entries(bookmarkedUrls) as [url, name] (url)}
-                  <BookmarkCard {url} {name} onRemove={() => removeBookmark(url)} />
-                {/each}
-              </div>
+            <div class="grid gap-3">
+              {#each Object.entries(bookmarkedUrls) as [url, name] (url)}
+                <BookmarkCard {url} {name} onRemove={() => removeBookmark(url)} />
+              {/each}
             </div>
           </div>
-        {/if}
-      </div>
+        </div>
+      </details>
     {/if}
 
     <!-- Features Documentation -->
@@ -396,31 +390,28 @@
         <form action="/analyse" method="GET" class="mx-auto w-full max-w-2xl space-y-4">
           <div class="space-y-3">
             {#each [...validUrls, ''] as url, i (i)}
-              <div class="flex gap-2">
-                <div class="flex-1">
-                  <label for="calendar-url-{i}" class="sr-only">
-                    Calendar feed URL {i + 1}
-                  </label>
-                  <input
-                    id="calendar-url-{i}"
-                    bind:value={calendarUrls[i]}
-                    name="urls"
-                    type="url"
-                    class="input input-bordered w-full"
-                    placeholder="https://calendar.example.com/feed{i + 1}.ics"
-                    required={i === 0}
-                    aria-label="Calendar feed URL {i + 1}"
-                  />
-                </div>
+              <div class="input w-full">
+                <label for="calendar-url-{i}" class="sr-only">
+                  Calendar feed URL {i + 1}
+                </label>
+                <input
+                  id="calendar-url-{i}"
+                  bind:value={calendarUrls[i]}
+                  name="urls"
+                  type="url"
+                  class="input input-bordered w-full"
+                  placeholder="https://calendar.example.com/feed{i ? `_${i + 1}` : ''}.ics"
+                  required={i === 0}
+                  aria-label="Calendar feed URL {i + 1}"
+                />
                 {#if validUrls.length > 1 && url}
                   <button
                     type="button"
-                    class="btn btn-square btn-ghost"
+                    class="label text-base-content/40 hover:text-base-content cursor-pointer"
                     onclick={() => removeUrlField(i)}
                     title="Remove calendar URL {i + 1}"
                   >
-                    <span class="sr-only">Remove calendar URL {i + 1}</span>
-                    {@render XMarkIcon({ class: 'size-5' })}
+                    ×
                   </button>
                 {/if}
               </div>

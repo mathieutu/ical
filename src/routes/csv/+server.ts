@@ -4,7 +4,7 @@ import { format, toDate as date } from 'date-fns'
 import { redirect } from '@sveltejs/kit'
 
 export const GET: RequestHandler = async ({ url, fetch }) => {
-  if (!url.searchParams.get('url')) {
+  if (!url.searchParams.get('urls')) {
     return redirect(303, '/?tab=csv')
   }
 
