@@ -1,7 +1,14 @@
+import { onMount } from 'svelte'
+
 export const useBookmarks = () => {
-  let bookmarkedUrls = $state<Record<string, string>>(
-    JSON.parse(localStorage.getItem('bookmarkedUrls') || '{}')
-  )
+  let bookmarkedUrls = $state<Record<string, string>>({})
+
+  onMount(() => {
+    const storedBookmarks = localStorage.getItem('bookmarkedUrls')
+    if (storedBookmarks) {
+      bookmarkedUrls = JSON.parse(storedBookmarks)
+    }
+  })
 
   $effect(() => {
     localStorage.setItem('bookmarkedUrls', JSON.stringify(bookmarkedUrls))
