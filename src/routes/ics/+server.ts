@@ -14,11 +14,11 @@ export const GET = async ({ url, fetch }: RequestEvent) => {
 
   // Create a new iCalendar component
   const newCalendar = new ICAL.Component(['vcalendar', [], []])
-  
+
   // Set calendar properties
   newCalendar.updatePropertyWithValue('prodid', '-//iCal Export//EN')
   newCalendar.updatePropertyWithValue('version', '2.0')
-  
+
   if (name) {
     newCalendar.updatePropertyWithValue('x-wr-calname', name)
   }
@@ -33,8 +33,6 @@ export const GET = async ({ url, fetch }: RequestEvent) => {
   events.forEach((event) => {
     const vevent = new ICAL.Component('vevent')
 
-    console.log(event);
-    
     vevent.addPropertyWithValue('summary', event.summary)
     vevent.addPropertyWithValue('dtstart', formatDateTimeIso(event.start))
     vevent.addPropertyWithValue('dtend', formatDateTimeIso(event.end))
@@ -43,7 +41,7 @@ export const GET = async ({ url, fetch }: RequestEvent) => {
     if (event.description) {
       vevent.addPropertyWithValue('description', event.description)
     }
-    
+
     if (event.location) {
       vevent.addPropertyWithValue('location', event.location)
     }

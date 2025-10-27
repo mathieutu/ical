@@ -19,10 +19,9 @@
     CodeBracketIcon,
     ChevronDownIcon,
     XMarkIcon,
-    SquaresIcon,
   } from '$lib/components/icons.svelte'
-    import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
-    import DetailsWithFocusOut from '$lib/components/DetailsWithFocusOut.svelte'
+  import { buildUrlWithParams, type QueryParams } from '$lib/utils/searchParams'
+  import DetailsWithFocusOut from '$lib/components/DetailsWithFocusOut.svelte'
 
   const { data }: PageProps = $props()
   const { events, stats, query, error, errorDetails, ...calendar } = $derived(data)
@@ -31,19 +30,19 @@
 
   const bookmarked = $derived(isBookmarked(page.url.toString()))
 
-  const replaceSearchParams = (    newSearchParams: Partial<QueryParams>  ): string =>
+  const replaceSearchParams = (newSearchParams: Partial<QueryParams>): string =>
     buildUrlWithParams(page.url.pathname, page.url, {
       ...query,
       ...newSearchParams,
     })
 
-    const updateEvents = (newSearchParams: Partial<QueryParams>): Promise<void> =>
-      goto(
-        buildUrlWithParams(page.url.pathname, page.url, {
-          ...query,
-          ...newSearchParams,
-        })
-      )
+  const updateEvents = (newSearchParams: Partial<QueryParams>): Promise<void> =>
+    goto(
+      buildUrlWithParams(page.url.pathname, page.url, {
+        ...query,
+        ...newSearchParams,
+      })
+    )
 
   const calendarPresets = {
     'Last Month': replaceSearchParams({
@@ -74,11 +73,9 @@
 
 <main class="grid gap-4 p-4">
   <div class="">
-    <h1 class="text-5xl font-black text-primary">
-      iCal manipulation API
-    </h1>
+    <h1 class="text-primary text-5xl font-black">iCal manipulation API</h1>
     <a
-      class="font-extralight underline link link-hover link-primary"
+      class="link link-hover link-primary font-extralight underline"
       href="https://www.mathieutu.dev">@mathieutu</a
     >
   </div>
@@ -95,19 +92,15 @@
   {/if}
 
   <div class="flex items-center justify-between">
-    <h2
-      class="inline-flex items-center gap-2 text-xl font-bold text-primary"
-    >
+    <h2 class="text-primary inline-flex items-center gap-2 text-xl font-bold">
       {@render CalendarIcon({ class: 'size-5' })}
 
       {calendar.name}
     </h2>
     <div class="flex flex-wrap items-center justify-end gap-1">
       <a href="/" class="btn">← Back</a>
-      <button
-        onclick={() =>
-          navigator.clipboard.writeText(page.url.toString())}
-        class="btn">Copy URL</button
+      <button onclick={() => navigator.clipboard.writeText(page.url.toString())} class="btn"
+        >Copy URL</button
       >
       <DetailsWithFocusOut class="dropdown max-xl:dropdown-end">
         <summary class="btn gap-2">
@@ -136,11 +129,7 @@
             </a>
           </li>
           <li>
-            <a
-              href="/json?{page.url.searchParams.toString()}"
-              target="_blank"
-              class="gap-2"
-            >
+            <a href="/json?{page.url.searchParams.toString()}" target="_blank" class="gap-2">
               {@render CodeBracketIcon({ class: 'size-5' })}
               See JSON
             </a>
@@ -162,70 +151,59 @@
       </button>
     </div>
   </div>
-  <form
-    bind:this={formEl}
-    data-sveltekit-keepfocus
-    data-sveltekit-noscroll
-  >
+  <form bind:this={formEl} data-sveltekit-keepfocus data-sveltekit-noscroll>
     <div class="flex items-center gap-4">
-        <DetailsWithFocusOut class="dropdown">
-          <summary class="input w-auto cursor-pointer">
-            {query.urls.length} Calendar{query.urls.length === 1 ? '' : 's'}
-          </summary>
-          <div
-            class="dropdown-content bg-base-100 rounded-box border-base-300 z-[1] mt-1 w-96 border p-3 shadow-lg"
-          >
-            <div class="space-y-2">
-              <div class="text-xs font-semibold text-base-content/70 mb-2">
-                Calendar Sources
-              </div>
-              {#each query.urls as url, i (i)}
-                <div class="flex gap-2 items-center">
-                  <div class="flex-1">
-                    <input
-                      placeholder="https://calendar.example.com/feed.ics"
-                      value={url}
-                      type="url"
-                      name="url"
-                      class="input input-xs input-bordered w-full"
-                    />
-                  </div>
-                  {#if query.urls.length > 1}
-                    <button
-                      type="button"
-                      class="btn btn-xs btn-square btn-ghost"
-                      onclick={() =>                         updateEvents({ urls: query.urls.toSpliced(i, 1) })}
-                      title="Remove"
-                    >
-                      <span class="sr-only">Remove</span>
-                      {@render XMarkIcon({ class: 'size-4' })}
-                    </button>
-                  {/if}
-                </div>
-              {/each}
-              <div class="flex gap-2">
+      <DetailsWithFocusOut class="dropdown">
+        <summary class="input w-auto cursor-pointer">
+          {query.urls.length} Calendar{query.urls.length === 1 ? '' : 's'}
+        </summary>
+        <div
+          class="dropdown-content bg-base-100 rounded-box border-base-300 z-[1] mt-1 w-96 border p-3 shadow-lg"
+        >
+          <div class="space-y-2">
+            <div class="text-base-content/70 mb-2 text-xs font-semibold">Calendar Sources</div>
+            {#each query.urls as url, i (i)}
+              <div class="flex items-center gap-2">
                 <div class="flex-1">
-                  {#key query.urls}
-                    <input
-                      placeholder="https://calendar.example.com/feed.ics"
-                      type="url"
-                      name="url"
-                      class="input input-xs input-bordered w-full"
-                    />
-                  {/key}
+                  <input
+                    placeholder="https://calendar.example.com/feed.ics"
+                    value={url}
+                    type="url"
+                    name="url"
+                    class="input input-xs input-bordered w-full"
+                  />
                 </div>
+                {#if query.urls.length > 1}
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-square btn-ghost"
+                    onclick={() => updateEvents({ urls: query.urls.toSpliced(i, 1) })}
+                    title="Remove"
+                  >
+                    <span class="sr-only">Remove</span>
+                    {@render XMarkIcon({ class: 'size-4' })}
+                  </button>
+                {/if}
               </div>
-              <div class="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  class="btn btn-soft btn-xs"
-                >
-                  Apply
-                </button>
+            {/each}
+            <div class="flex gap-2">
+              <div class="flex-1">
+                {#key query.urls}
+                  <input
+                    placeholder="https://calendar.example.com/feed.ics"
+                    type="url"
+                    name="url"
+                    class="input input-xs input-bordered w-full"
+                  />
+                {/key}
               </div>
             </div>
+            <div class="flex justify-end pt-2">
+              <button type="submit" class="btn btn-soft btn-xs"> Apply </button>
+            </div>
           </div>
-        </DetailsWithFocusOut>
+        </div>
+      </DetailsWithFocusOut>
 
       <details class="dropdown">
         <summary class="input w-auto cursor-pointer">
@@ -240,9 +218,7 @@
             href={replaceSearchParams({ from: '', to: '' })}>×</a
           >
         </summary>
-        <div
-          class="dropdown-content bg-base-100 rounded-box grid gap-2 py-4 shadow-lg"
-        >
+        <div class="dropdown-content bg-base-100 rounded-box grid gap-2 py-4 shadow-lg">
           <div class="flex flex-wrap gap-2 px-2">
             {#each Object.entries(calendarPresets) as [label, url] (label)}
               <a href={url} class="btn btn-xs btn-ghost">
@@ -311,11 +287,7 @@
       </label>
       <label class="select w-auto">
         <span class="label">Sort</span>
-        <select
-          name="sort"
-          value={query.sort}
-          onchange={() => formEl.requestSubmit()}
-        >
+        <select name="sort" value={query.sort} onchange={() => formEl.requestSubmit()}>
           <option value="date-asc">Date Ascending</option>
           <option value="date-desc">Date Descending</option>
           <option value="summary-asc">Summary Ascending</option>
@@ -324,11 +296,7 @@
       </label>
       <label class="select w-auto">
         <span class="label">Group by</span>
-        <select
-          name="grouped"
-          value={query.grouped || ''}
-          onchange={() => formEl.requestSubmit()}
-        >
+        <select name="grouped" value={query.grouped || ''} onchange={() => formEl.requestSubmit()}>
           <option value="">No grouping</option>
           <option value="summary">Summary</option>
           <option value="month">Month</option>
@@ -337,7 +305,7 @@
     </div>
     {#if stats.totalEventsCount && stats.filteredEventsCount !== undefined}
       <div class="mt-1 flex items-center justify-between gap-4">
-        <div class="text-sm text-base-content/60">
+        <div class="text-base-content/60 text-sm">
           {#if query.grouped}
             Showing {events.length} groups ({stats.filteredEventsCount} events, {stats.totalHours.toFixed(
               2
@@ -345,11 +313,8 @@
               {formatCurrency(stats.totalAmount)}{/if}) / {stats.totalEventsCount}
             total events
           {:else}
-            Showing {stats.filteredEventsCount} events ({stats.totalHours.toFixed(
-              2
-            )} hours{#if stats.totalAmount}{' '}= {formatCurrency(
-                stats.totalAmount
-              )}{/if}) / {stats.totalEventsCount} total events
+            Showing {stats.filteredEventsCount} events ({stats.totalHours.toFixed(2)} hours{#if stats.totalAmount}{' '}=
+              {formatCurrency(stats.totalAmount)}{/if}) / {stats.totalEventsCount} total events
           {/if}
         </div>
         <label class="input input-xs w-auto">
@@ -364,11 +329,11 @@
             value={query.hourlyRate || ''}
             oninput={debounce(() => formEl.requestSubmit(), 300)}
           />
-          <span class="label text-xs text-base-content/50">€/h</span>
+          <span class="label text-base-content/50 text-xs">€/h</span>
         </label>
       </div>
     {/if}
-    </form>
+  </form>
 
   <div
     class="card bg-base-100 border-base-300 border text-sm shadow-md
@@ -379,7 +344,7 @@
         <li class="list-row">
           <div class="list-col-grow">
             <div class="font-semibold">{event.summary}</div>
-            <div class="text-xs text-base-content/40">
+            <div class="text-base-content/40 text-xs">
               {event.start}
               {#if event.start !== event.end}
                 → {event.end}

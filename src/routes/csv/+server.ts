@@ -20,17 +20,11 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
     headers.push('Amount')
   }
 
-  const escapeCsvValue = (
-    value: string | number | null | undefined
-  ): string => {
+  const escapeCsvValue = (value: string | number | null | undefined): string => {
     if (value === null || value === undefined) return ''
 
     const stringValue = String(value)
-    if (
-      stringValue.includes(',') ||
-      stringValue.includes('"') ||
-      stringValue.includes('\n')
-    ) {
+    if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
       return `"${stringValue.replace(/"/g, '""')}"`
     }
 

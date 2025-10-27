@@ -36,9 +36,7 @@
       const urlObj = new URL(url)
       const tool = urlObj.pathname.split('/').filter(Boolean)[0] || ''
       const params = Object.fromEntries(
-        urlObj.searchParams
-          .entries()
-          .filter(([key, value]) => key !== 'url' && value?.trim())
+        urlObj.searchParams.entries().filter(([key, value]) => key !== 'url' && value?.trim())
       )
 
       return {
@@ -125,9 +123,7 @@
             {#each Object.entries(parsedUrl.params) as [key, value] (key)}
               <div class="flex items-baseline gap-1.5">
                 <span class="text-base-content/60">{getParamLabel(key)}</span>
-                <span class="text-base-content/80"
-                  >{formatParamValue(key, value)}</span
-                >
+                <span class="text-base-content/80">{formatParamValue(key, value)}</span>
               </div>
             {/each}
           </div>

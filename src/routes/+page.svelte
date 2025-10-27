@@ -1,50 +1,28 @@
 <script lang="ts">
   import { useBookmarks } from '$lib/utils/bookmarks.svelte'
-  import { page } from '$app/state'
   import {
     TagIcon,
     ChatIcon,
     BookmarkIcon,
     ChevronDownIcon,
-    CopyIcon,
     XMarkIcon,
     ChartBarIcon,
+    LinkIcon,
+    LockClosedIcon,
     SquaresIcon,
-    CodeBracketIcon,
-    TableCellsIcon,
-    InfoCircleIcon,
-    ArrowTopRightOnSquareIcon,
-    DownloadIcon,
   } from '$lib/components/icons.svelte'
   import BookmarkCard from '$lib/components/BookmarkCard.svelte'
-    import { buildUrlWithParams } from '$lib/utils/searchParams'
 
-  let mergeUrl: string[] = $state([])
-  let mergeUrlToLink = $derived([...mergeUrl.filter(Boolean)])
-  let mergeFinalUrl = $derived.by(() => {
-    if (!mergeUrlToLink.length) return ''
-    return buildUrlWithParams('analyse', page.url, { urls: mergeUrlToLink })
-  })
-  let mergeIcsUrl = $derived.by(() => {
-    if (!mergeUrlToLink.length) return ''
-    return buildUrlWithParams('ics', page.url, { urls: mergeUrlToLink })
-  })
+  let calendarUrls: string[] = $state([])
+  let validUrls = $derived(calendarUrls.filter((url) => url.trim()))
 
-  let singleUrl: string = $state('')
-
-  let activeTab = $derived.by(() => {
-    const tab = page.url.searchParams.get('tab') ?? 'analyse'
-    return ['merge', 'json', 'csv', 'analyse'].includes(tab) ? tab : 'analyse'
-  })
-
-  let singleUrlFinalUrl = $derived.by(() => {
-    if (!singleUrl.length) return ''
-    return buildUrlWithParams(activeTab, page.url, { urls: [singleUrl] })
-  })
-
-  const { bookmarkedUrls, addBookmark, removeBookmark } = useBookmarks()
+  const { bookmarkedUrls, removeBookmark } = useBookmarks()
 
   let showBookmarks = $state(false)
+
+  const removeUrlField = (index: number) => {
+    calendarUrls = calendarUrls.filter((_, i) => i !== index)
+  }
 </script>
 
 <svelte:head>
@@ -55,9 +33,7 @@
   />
 </svelte:head>
 
-<div
-  class="from-base-200 via-base-100 to-base-200 min-h-screen w-full bg-gradient-to-br"
->
+<div class="from-base-200 via-base-100 to-base-200 min-h-screen w-full bg-gradient-to-br">
   <!-- Hero Section -->
   <div class="bg-primary/5 border-primary/10 border-b">
     <div class="container mx-auto max-w-6xl px-4 py-12">
@@ -66,16 +42,15 @@
           class="bg-primary/10 text-primary mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium"
         >
           {@render TagIcon({ class: 'size-4' })}
-          Calendar Management API
+          Calendar Management Tool
         </div>
         <h1 class="text-base-content mb-4 text-5xl font-black lg:text-6xl">
           <span class="text-primary">iCal</span> Tools
         </h1>
         <p class="text-base-content/70 mx-auto mb-6 max-w-2xl text-lg">
-          Merge multiple calendars, convert them to JSON or CSV, <br />or
-          analyze, filter and search their content.
-          <br class="hidden sm:block" />
-          Enter your URLs and get instant results.
+          Powerful calendar manipulation and analysis tools.
+          <br />
+          Merge multiple calendars, filter events, calculate billable hours, and export to various formats.
         </p>
         <a
           class="text-base-content/60 hover:text-primary inline-flex items-center gap-2 text-sm transition"
@@ -89,19 +64,14 @@
     </div>
   </div>
 
-  <div class="container mx-auto max-w-6xl px-4 py-8">
+  <div class="container mx-auto max-w-4xl px-4 py-8">
     <!-- Bookmarks Section -->
     {#if Object.keys(bookmarkedUrls).length}
       <div class="mb-8">
-        <button
-          onclick={() => (showBookmarks = !showBookmarks)}
-          class="btn btn-ghost mb-4 gap-2"
-        >
+        <button onclick={() => (showBookmarks = !showBookmarks)} class="btn btn-ghost mb-4 gap-2">
           {@render BookmarkIcon({ class: 'size-5' })}
-          <span class="font-semibold">Your Bookmarked URLs</span>
-          <span class="badge badge-primary"
-            >{Object.keys(bookmarkedUrls).length}</span
-          >
+          <span class="font-semibold">Your Bookmarked Calendars</span>
+          <span class="badge badge-primary">{Object.keys(bookmarkedUrls).length}</span>
           {@render ChevronDownIcon({
             class: `size-4 transition-transform ${showBookmarks ? 'rotate-180' : ''}`,
           })}
@@ -111,22 +81,15 @@
           <div class="card bg-base-100 border-base-300 border shadow-xl">
             <div class="card-body p-6">
               <div class="mb-4">
-                <h3 class="text-base-content mb-1 text-lg font-bold">
-                  Saved Calendars
-                </h3>
+                <h3 class="text-base-content mb-1 text-lg font-bold">Saved Calendars</h3>
                 <p class="text-base-content/60 text-sm">
-                  Quick access to your frequently used calendar URLs and merged
-                  feeds
+                  Quick access to your bookmarked calendar views
                 </p>
               </div>
 
               <div class="grid gap-3">
                 {#each Object.entries(bookmarkedUrls) as [url, name] (url)}
-                  <BookmarkCard
-                    {url}
-                    {name}
-                    onRemove={() => removeBookmark(url)}
-                  />
+                  <BookmarkCard {url} {name} onRemove={() => removeBookmark(url)} />
                 {/each}
               </div>
             </div>
@@ -135,624 +98,350 @@
       </div>
     {/if}
 
-    <!-- Main Tool Section -->
-    <div class="card bg-base-100 shadow-2xl">
-      <!-- Tabs -->
-      <div
-        role="tablist"
-        class="tabs tabs-boxed bg-base-200 rounded-b-none p-2"
-      >
-        <a
-          role="tab"
-          href="?tab=analyse"
-          class="tab gap-2 {activeTab === 'analyse' ? 'tab-active' : ''}"
-        >
-          {@render ChartBarIcon({ class: 'size-5' })}
-          <span class="hidden sm:inline">Analyze</span>
-        </a>
-        <a
-          role="tab"
-          href="?tab=merge"
-          class="tab gap-2 {activeTab === 'merge' ? 'tab-active' : ''}"
-        >
-          {@render SquaresIcon({ class: 'size-5' })}
-          <span class="hidden sm:inline">Merge</span>
-        </a>
-        <a
-          role="tab"
-          href="?tab=json"
-          class="tab gap-2 {activeTab === 'json' ? 'tab-active' : ''}"
-        >
-          {@render CodeBracketIcon({ class: 'size-5' })}
-          <span class="hidden sm:inline">JSON</span>
-        </a>
-        <a
-          role="tab"
-          href="?tab=csv"
-          class="tab gap-2 {activeTab === 'csv' ? 'tab-active' : ''}"
-        >
-          {@render TableCellsIcon({ class: 'size-5' })}
-          <span class="hidden sm:inline">CSV</span>
-        </a>
+    <!-- Features Documentation -->
+    <div class="mt-12 space-y-8">
+      <div class="text-center">
+        <h2 class="text-base-content mb-2 text-3xl font-bold">Powerful Features</h2>
+        <p class="text-base-content/60">
+          Everything you need to manage and analyze your calendar data
+        </p>
       </div>
 
-      <div class="card-body p-6 lg:p-8">
-        <!-- Analyze Tab -->
-        {#if activeTab === 'analyse'}
-          <div class="space-y-4">
-            <div>
-              <h2 class="mb-2 text-2xl font-bold">Analyze a Calendar</h2>
-              <p class="text-base-content/70 text-sm">
-                Get detailed statistics and an overview of your iCal feed with
-                powerful filtering and analysis tools.
+      <!-- Analyze & Filter Feature -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="flex items-start gap-4">
+            <div class="text-primary bg-primary/10 rounded-full p-2">
+              {@render ChartBarIcon({ class: 'size-6' })}
+            </div>
+            <div class="flex-1">
+              <h3 class="mb-2 text-2xl font-bold">Analyze & Filter Events</h3>
+              <p class="text-base-content/70 mb-4">
+                Get deep insights into your calendar data with powerful filtering and analysis
+                tools. Perfect for freelancers tracking billable hours, project managers analyzing
+                team time, or anyone wanting to understand their schedule better.
               </p>
-            </div>
 
-            <div class="alert bg-base-200/50">
-              {@render InfoCircleIcon({ class: 'size-5 self-start' })}
-              <div class="text-sm">
-                <div class="mb-1 font-semibold">
-                  Powerful Calendar Analytics
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📅 Date Range Filtering</div>
+                  <p class="text-xs opacity-70">
+                    Select custom date ranges or use presets like "Last Month" or "This Month" to
+                    analyze specific periods.
+                  </p>
                 </div>
-                <div class="space-y-1 text-xs opacity-70">
-                  <div>
-                    Track billable hours, analyze time spent on projects, or get
-                    insights into your schedule. Filter by date ranges, search
-                    events, and calculate totals with hourly rates.
-                  </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">🔍 Event Search</div>
+                  <p class="text-xs opacity-70">
+                    Filter events by title/summary to focus on specific types of meetings or
+                    activities.
+                  </p>
                 </div>
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >Available features</summary
-                  >
-                  <div class="mt-2 space-y-2 text-xs">
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">📅 Date Filtering</div>
-                      <div class="opacity-70">
-                        Select custom date ranges or use presets (Last Month,
-                        This Month) to analyze specific periods.
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">🔍 Search Events</div>
-                      <div class="opacity-70">
-                        Filter events by summary/title to focus on specific
-                        types of meetings or activities.
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">
-                        📊 Sorting & Grouping
-                      </div>
-                      <div class="opacity-70">
-                        Sort by date or summary (ascending/descending). Group
-                        events by month or by summary to see totals per
-                        category.
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">
-                        💰 Hourly Rate Calculation
-                      </div>
-                      <div class="opacity-70">
-                        Set an hourly rate to automatically calculate earnings
-                        based on event durations - perfect for freelancers and
-                        consultants!
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">📈 Statistics</div>
-                      <div class="opacity-70">
-                        View total hours, event counts, date ranges, and
-                        monetary totals at a glance.
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">💾 Export to CSV</div>
-                      <div class="opacity-70">
-                        Export your filtered and analyzed data to CSV for
-                        further processing in Excel or other tools.
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >Example usage</summary
-                  >
-                  <div class="bg-base-300 mt-2 rounded p-2 text-xs">
-                    <div class="mb-2 font-semibold">
-                      Freelancer tracking billable hours for a client:
-                    </div>
-                    <div class="space-y-1 opacity-70">
-                      <div>
-                        <strong>Scenario:</strong> You want to invoice Client A for
-                        October 2025
-                      </div>
-                      <div class="mt-2"><strong>Steps:</strong></div>
-                      <div class="pl-2">
-                        1. Enter your client's calendar URL
-                      </div>
-                      <div class="pl-2">
-                        2. Select date range: October 1-31, 2025
-                      </div>
-                      <div class="pl-2">3. Filter by summary: "Client A"</div>
-                      <div class="pl-2">4. Set hourly rate: €75/h</div>
-                      <div class="pl-2">
-                        5. Group by: Summary (to see totals per meeting type)
-                      </div>
-                      <div class="mt-2">
-                        <strong>Result:</strong> See all Client A meetings with total
-                        hours (e.g., 42.5h) and calculated amount (€3,187.50). Export
-                        to CSV for your invoice!
-                      </div>
-                    </div>
-                  </div>
-                </details>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📊 Sorting & Grouping</div>
+                  <p class="text-xs opacity-70">
+                    Sort events by date or name. Group by month or by summary to see totals per
+                    category.
+                  </p>
+                </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">💰 Hourly Rate Calculator</div>
+                  <p class="text-xs opacity-70">
+                    Set an hourly rate to automatically calculate earnings based on event durations.
+                  </p>
+                </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📈 Statistics</div>
+                  <p class="text-xs opacity-70">
+                    View total hours, event counts, date ranges, and monetary totals at a glance.
+                  </p>
+                </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">🔖 Bookmarks</div>
+                  <p class="text-xs opacity-70">
+                    Save your frequently used calendar views for quick access later.
+                  </p>
+                </div>
+              </div>
+
+              <div class="bg-primary/10 border-primary/20 mt-4 rounded-lg border p-4">
+                <div class="mb-2 text-sm font-semibold">💡 Example Use Case:</div>
+                <p class="text-xs opacity-80">
+                  <strong>Freelancer invoicing:</strong> Filter your calendar for "Client A" meetings
+                  in October, set your hourly rate to €75/h, and see that you worked 42.5 hours for a
+                  total of €3,187.50. Export to CSV and attach to your invoice!
+                </p>
               </div>
             </div>
-
-            <div>
-              <input
-                bind:value={singleUrl}
-                type="url"
-                class="input input-bordered w-full"
-                placeholder="https://calendar.example.com/feed.ics"
-              />
-            </div>
-
-            {#if singleUrlFinalUrl}
-              <div class="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onclick={() => addBookmark(singleUrlFinalUrl)}
-                  class="btn btn-ghost btn-sm gap-2"
-                  title="Bookmark this url"
-                >
-                  {@render BookmarkIcon({ class: 'size-5' })}
-                  Bookmark
-                </button>
-                <a
-                  href={singleUrlFinalUrl}
-                  class="btn btn-sm gap-2"
-                  target="_blank"
-                >
-                  {@render ArrowTopRightOnSquareIcon({ class: 'size-5' })}
-                  Analyse Calendar
-                </a>
-              </div>
-            {/if}
           </div>
-        {/if}
+        </div>
+      </div>
 
-        <!-- Merge Tab -->
-        {#if activeTab === 'merge'}
-          <div class="space-y-4">
-            <div>
-              <h2 class="mb-2 text-2xl font-bold">Merge Multiple Calendars</h2>
-              <p class="text-base-content/70 text-sm">
-                Combine as many calendar feeds as needed from different clients,
-                schools, organizations, or projects into a single unified feed.
+      <!-- Merge Calendars Feature -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="flex items-start gap-4">
+            <div class="text-primary bg-primary/10 rounded-full p-2">
+              {@render SquaresIcon({ class: 'size-6' })}
+            </div>
+            <div class="flex-1">
+              <h3 class="mb-2 text-2xl font-bold">Merge Multiple Calendars</h3>
+              <p class="text-base-content/70 mb-4">
+                Combine as many calendar feeds as you need into a single unified view. Perfect for
+                managing multiple clients, coordinating between work and personal calendars, or
+                consolidating schedules from different platforms.
               </p>
-            </div>
 
-            <div class="alert bg-base-200/50">
-              {@render InfoCircleIcon({ class: 'size-5 self-start' })}
-              <div class="text-sm">
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >Example usage</summary
-                  >
-                  <div class="bg-base-300 mt-2 rounded p-2 text-xs">
-                    <div class="mb-2 font-semibold">
-                      Freelance consultant managing multiple clients:
-                    </div>
-                    <div class="space-y-1 opacity-70">
-                      <div><strong>Input URLs:</strong></div>
-                      <div class="pl-2">
-                        •
-                        https://calendar.google.com/calendar/ical/.../client-a-meetings.ics
-                      </div>
-                      <div class="pl-2">
-                        •
-                        https://outlook.office365.com/owa/calendar/.../client-b-project.ics
-                      </div>
-                      <div class="pl-2">
-                        •
-                        https://calendar.google.com/calendar/ical/.../client-c-deadlines.ics
-                      </div>
-                      <div class="mt-2"><strong>Generated URL:</strong></div>
-                      <div class="pl-2 font-mono text-[10px] break-all">
-                        {window.location
-                          .origin}/ics?url=https://calendar.google.com/...&url=https://outlook.office365.com/...&url=https://calendar.google.com/...
-                      </div>
-                      <div class="mt-2">
-                        <strong>Result:</strong> One unified calendar showing all
-                        client meetings, project milestones, and deadlines across
-                        all your engagements!
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >How to use the generated URL</summary
-                  >
-                  <div class="mt-2 space-y-2 text-xs">
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">1. Copy the ICS URL</div>
-                      <div class="opacity-70">
-                        After adding your calendar URLs, click "Copy ICS URL"
-                        to get your unique merged calendar URL.
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">
-                        2. Subscribe in your calendar app
-                      </div>
-                      <div class="space-y-1 opacity-70">
-                        <div>
-                          <strong>Google Calendar:</strong> Settings → Add calendar
-                          → From URL → Paste your ICS URL
-                        </div>
-                        <div>
-                          <strong>Apple Calendar:</strong> File → New Calendar Subscription
-                          → Paste your ICS URL
-                        </div>
-                        <div>
-                          <strong>Outlook:</strong> Add calendar → Subscribe from
-                          web → Paste your ICS URL
-                        </div>
-                      </div>
-                    </div>
-                    <div class="bg-base-300 rounded p-2">
-                      <div class="mb-1 font-semibold">3. Auto-sync</div>
-                      <div class="opacity-70">
-                        Your calendar app will automatically refresh the merged
-                        feed. All events from your source calendars will appear
-                        together in one unified view!
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              {#each [...mergeUrlToLink, ''] as _url, i (i)}
-                <div class="flex gap-2">
-                  <div class="flex-1">
-                    <input
-                      placeholder="https://calendar.example.com/feed.ics"
-                      bind:value={mergeUrl[i]}
-                      type="url"
-                      class="input input-bordered w-full"
-                    />
-                  </div>
-                  {#if mergeUrl[i]}
-                    <button
-                      class="btn btn-square btn-ghost"
-                      onclick={() => (mergeUrl[i] = '')}
-                      title="Remove"
-                    >
-                      <span class="sr-only">Remove</span>
-                      {@render XMarkIcon({ class: 'size-5' })}
-                    </button>
-                  {/if}
+              <div class="space-y-3">
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">✨ Unlimited Calendars</div>
+                  <p class="text-xs opacity-70">
+                    Add as many calendar URLs as you need. No limits on the number of sources.
+                  </p>
                 </div>
-              {/each}
-            </div>
 
-            {#if mergeFinalUrl}
-              <div class="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onclick={() => addBookmark(mergeFinalUrl)}
-                  class="btn btn-ghost btn-sm gap-2"
-                  title="Bookmark this url"
-                >
-                  {@render BookmarkIcon({ class: 'size-5' })}
-                  Bookmark
-                </button>
-                <a
-                  href={mergeFinalUrl}
-                  class="btn btn-primary btn-sm gap-2"
-                  title="Analyze merged calendars"
-                >
-                  {@render ChartBarIcon({ class: 'size-5' })}
-                  Analyze Merged Calendars
-                </a>
-                <button
-                  type="button"
-                  onclick={() => navigator.clipboard.writeText(mergeIcsUrl)}
-                  class="btn btn-primary btn-sm btn-soft gap-2"
-                  title="Copy Merged Calendar URL"
-                >
-                  {@render CopyIcon({ class: 'size-5' })}
-                  Copy ICS URL
-                </button>
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">🔄 Real-time Sync</div>
+                  <p class="text-xs opacity-70">
+                    Subscribe to the merged feed URL in your calendar app (Google Calendar, Apple
+                    Calendar, Outlook) and it will automatically update as your source calendars
+                    change.
+                  </p>
+                </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">🎯 All Features Available</div>
+                  <p class="text-xs opacity-70">
+                    Once merged, use all analysis features on the combined calendar: filter, search,
+                    calculate hours, and export.
+                  </p>
+                </div>
               </div>
-            {/if}
-          </div>
-        {/if}
 
-        <!-- JSON Tab -->
-        {#if activeTab === 'json'}
-          <div class="space-y-4">
-            <div>
-              <h2 class="mb-2 text-2xl font-bold">Convert to JSON</h2>
-              <p class="text-base-content/70 text-sm">
-                Transform an iCal feed into JSON format for easier programmatic
-                processing.
+              <div class="bg-primary/10 border-primary/20 mt-4 rounded-lg border p-4">
+                <div class="mb-2 text-sm font-semibold">💡 Example Use Case:</div>
+                <p class="text-xs opacity-80">
+                  <strong>Multi-client consultant:</strong> Merge calendars from Client A (Google), Client
+                  B (Outlook), and Client C (Apple) into one feed. Subscribe to it in your main calendar
+                  app to see all engagements in one place without switching between accounts.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Data Feature -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="flex items-start gap-4">
+            <div class="text-primary bg-primary/10 rounded-full p-2">
+              {@render LinkIcon({ class: 'size-6' })}
+            </div>
+            <div class="flex-1">
+              <h3 class="mb-2 text-2xl font-bold">Export to Any Format</h3>
+              <p class="text-base-content/70 mb-4">
+                Export your calendar data in the format that works best for your workflow. All
+                exports respect your filters and include calculated fields like total hours and
+                amounts.
               </p>
-            </div>
 
-            <div class="alert bg-base-200/50">
-              {@render InfoCircleIcon({ class: 'size-5 self-start' })}
-              <div class="text-sm">
-                <div class="mb-1 font-semibold">JSON Output Format</div>
-                <div class="space-y-1 text-xs opacity-70">
-                  <div>
-                    <strong>Query parameters:</strong>
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >url</code
-                    >
-                    (required),
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >from</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >to</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >summary</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >sort</code
-                    >
-                    (date-asc|date-desc|summary-asc|summary-desc),
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >grouped</code
-                    >
-                    (month|summary),
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >hourlyRate</code
-                    >
-                  </div>
-                  <div>
-                    <strong>Returns:</strong> Events with
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >summary</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >start</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >end</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >description</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >location</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >totalHours</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >amount</code
-                    > (if hourlyRate set), plus stats.
-                  </div>
+              <div class="grid gap-3 sm:grid-cols-3">
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📋 CSV Export</div>
+                  <p class="mb-2 text-xs opacity-70">
+                    Download as CSV for any spreadsheet application.
+                  </p>
+                  <code class="bg-base-300 rounded px-1 py-0.5 text-[10px]">
+                    Summary,Start,End,Hours,Amount
+                  </code>
                 </div>
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >View example output</summary
-                  >
-                  <pre
-                    class="bg-base-300 mt-2 overflow-x-auto rounded p-2 text-xs"><code
-                      >{JSON.stringify(
-                        {
-                          name: 'My Calendar',
-                          events: [
-                            {
-                              summary: 'Team Meeting',
-                              start: '2025-10-22T10:00:00.000Z',
-                              end: '2025-10-22T11:00:00.000Z',
-                              description: 'Weekly sync',
-                              location: 'Room 101',
-                              totalHours: 1,
-                              amount: 50,
-                            },
-                            {
-                              summary: 'Project Review',
-                              start: '2025-10-23T14:00:00.000Z',
-                              end: '2025-10-23T16:00:00.000Z',
-                              description: 'Q4 project review',
-                              location: 'Conference Room',
-                              totalHours: 2,
-                              amount: 100,
-                            },
-                          ],
-                          stats: {
-                            totalEventsCount: 10,
-                            filteredEventsCount: 2,
-                            totalHours: 3,
-                            totalAmount: 150,
-                            earliestStart: '2025-10-22 10:00',
-                            latestEnd: '2025-10-23 16:00',
-                          },
-                          query: {
-                            url: '...',
-                            from: '2025-10-01 00:00',
-                            to: '2025-10-31 00:00',
-                            summary: null,
-                            sort: 'date-asc',
-                            grouped: null,
-                            hourlyRate: '50',
-                          },
-                        },
-                        null,
-                        2
-                      )}</code
-                    ></pre>
-                </details>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">{'{ }'} JSON API</div>
+                  <p class="mb-2 text-xs opacity-70">
+                    Get structured JSON data for custom integrations and automation.
+                  </p>
+                  <code class="bg-base-300 rounded px-1 py-0.5 text-[10px]">
+                    /json?urls=...&from=...
+                  </code>
+                </div>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📅 ICS Feed</div>
+                  <p class="mb-2 text-xs opacity-70">
+                    Subscribe to filtered/merged calendar in any calendar app.
+                  </p>
+                  <code class="bg-base-300 rounded px-1 py-0.5 text-[10px]">
+                    /ics?urls=...&summary=...
+                  </code>
+                </div>
+              </div>
+              <div class="bg-base-200/50 mt-2 rounded-lg p-3">
+                <div class="mb-1 font-semibold">✨ Auto-sync</div>
+                <p class="mb-2 text-xs opacity-70">
+                  Your calendar app will automatically refresh the feed periodically. Any changes to
+                  your filters or source calendars will be reflected automatically!
+                </p>
+              </div>
+
+              <div class="bg-primary/10 border-primary/20 mt-4 rounded-lg border p-4">
+                <div class="mb-2 text-sm font-semibold">💡 Example Use Case:</div>
+                <p class="mb-3 text-xs opacity-80">
+                  <strong>Subscribe to Filtered Calendar:</strong>
+                  You want to track all "Sprint Planning" and "Retrospective" meetings across multiple
+                  team calendars in your personal calendar app, without all the noise.
+                </p>
+                <div class="text-xs opacity-80">
+                  <div><strong>Steps:</strong></div>
+                  <ol class="list-inside list-decimal pl-2">
+                    <li>
+                      Add your team calendar URLs and filter by summary (e.g., "Sprint" or "Retro")
+                    </li>
+                    <li>Click "Copy calendar URL" in the export dropdown on the analysis page</li>
+                    <li>
+                      Subscribe in your calendar app:
+                      <ul class="list-inside list-disc pl-2 text-xs">
+                        <li class="">
+                          Google Calendar:
+                          <span class="opacity-70"
+                            >Settings → "Add calendar" → "From URL" → Paste ICS URL → Add calendar</span
+                          >
+                        </li>
+                        <li class="">
+                          Apple Calendar:
+                          <span class="opacity-70"
+                            >File → "New Calendar Subscription" → Paste ICS URL → Subscribe</span
+                          >
+                        </li>
+                        <li class="">
+                          Outlook:
+                          <span class="opacity-70"
+                            >Add calendar → "Subscribe from web" → Paste ICS URL → Import</span
+                          >
+                        </li>
+                      </ul>
+                    </li>
+                  </ol>
+                </div>
               </div>
             </div>
-
-            <div>
-              <input
-                bind:value={singleUrl}
-                type="url"
-                class="input input-bordered w-full"
-                placeholder="https://calendar.example.com/feed.ics"
-              />
-            </div>
-
-            {#if singleUrlFinalUrl}
-              <div class="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onclick={() => addBookmark(singleUrlFinalUrl)}
-                  class="btn btn-ghost btn-sm gap-2"
-                  title="Bookmark this url"
-                >
-                  {@render BookmarkIcon({ class: 'size-5' })}
-                  Bookmark
-                </button>
-                <a
-                  href={singleUrlFinalUrl}
-                  class="btn btn-ghost btn-sm gap-2"
-                  target="_blank"
-                >
-                  {@render ArrowTopRightOnSquareIcon({ class: 'size-5' })}
-                  Customize Calendar
-                </a>
-                <button
-                  type="button"
-                  onclick={() =>
-                    navigator.clipboard.writeText(singleUrlFinalUrl)}
-                  class="btn btn-sm gap-2"
-                  title="Copy JSON URL"
-                >
-                  {@render CopyIcon({ class: 'size-5' })}
-                  Copy JSON URL
-                </button>
-              </div>
-            {/if}
           </div>
-        {/if}
+        </div>
+      </div>
 
-        <!-- CSV Tab -->
-        {#if activeTab === 'csv'}
-          <div class="space-y-4">
-            <div>
-              <h2 class="mb-2 text-2xl font-bold">Convert to CSV</h2>
-              <p class="text-base-content/70 text-sm">
-                Transform an iCal feed into CSV format for spreadsheet
-                applications.
+      <!-- Privacy Feature -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="flex items-start gap-4">
+            <div class="text-primary bg-primary/10 rounded-full p-2">
+              {@render LockClosedIcon({ class: 'size-6' })}
+            </div>
+            <div class="flex-1">
+              <h3 class="mb-2 text-2xl font-bold">Privacy & Security First</h3>
+              <p class="text-base-content/70 mb-4">
+                Your calendar data is sensitive. We take privacy seriously with a zero-storage
+                architecture.
               </p>
-            </div>
 
-            <div class="alert bg-base-200/50">
-              {@render InfoCircleIcon({ class: 'size-5 self-start' })}
-              <div class="text-sm">
-                <div class="mb-1 font-semibold">CSV Output Format</div>
-                <div class="space-y-1 text-xs opacity-70">
-                  <div>
-                    <strong>Query parameters:</strong> Same as JSON -
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >url</code
-                    >
-                    (required),
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >from</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >to</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >summary</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >sort</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >grouped</code
-                    >,
-                    <code class="bg-base-300 rounded px-1 py-0.5 text-xs"
-                      >hourlyRate</code
-                    >
-                  </div>
-                  <div>
-                    <strong>Returns:</strong> CSV file with columns Summary, Start,
-                    End, Total Hours, Amount (if hourlyRate set), plus a TOTAL summary
-                    row.
-                  </div>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">🚫 No Data Storage</div>
+                  <p class="text-xs opacity-70">
+                    All processing happens on-the-fly, in lambda functions ran when you request it.
+                    We never save your calendar data to disk or memory.
+                  </p>
                 </div>
-                <details class="mt-2">
-                  <summary
-                    class="hover:text-primary cursor-pointer text-xs font-medium"
-                    >View example output</summary
-                  >
-                  <pre
-                    class="bg-base-300 mt-2 overflow-x-auto rounded p-2 text-xs"><code
-                      >Summary,Start,End,Total Hours,Amount
-"Team Meeting","2025-10-22 10:00","2025-10-22 11:00",1.00,50.00
-"Project Review","2025-10-23 14:00","2025-10-23 16:00",2.00,100.00
-TOTAL,"2025-10-22 10:00","2025-10-23 16:00",3.00,150.00</code
-                    ></pre>
-                </details>
+
+                <div class="bg-base-200/50 rounded-lg p-3">
+                  <div class="mb-1 font-semibold">📝 No Logging</div>
+                  <p class="text-xs opacity-70">
+                    We don't log your calendar URLs or event data. Bookmarks are stored in your
+                    browser's local storage and can be cleared anytime.
+                  </p>
+                </div>
+              </div>
+
+              <div class="bg-primary/10 border-primary/20 mt-4 rounded-lg border p-4">
+                <div class="mb-2 text-sm font-semibold">💡 Open source</div>
+                <p class="text-xs opacity-80">
+                  This tool is built with transparency in mind. Check out the <a
+                    class="link"
+                    href="https://github.com/mathieutu/ical">source code</a
+                  > to see exactly how your data is processed.
+                </p>
               </div>
             </div>
-
-            <div>
-              <input
-                bind:value={singleUrl}
-                type="url"
-                class="input input-bordered w-full"
-                placeholder="https://calendar.example.com/feed.ics"
-              />
-            </div>
-
-            {#if singleUrlFinalUrl}
-              <div class="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onclick={() => addBookmark(singleUrlFinalUrl)}
-                  class="btn btn-ghost btn-sm gap-2"
-                  title="Bookmark this url"
-                >
-                  {@render BookmarkIcon({ class: 'size-5' })}
-                  Bookmark
-                </button>
-                <a
-                  href={singleUrlFinalUrl}
-                  class="btn btn-ghost btn-sm gap-2"
-                  target="_blank"
-                >
-                  {@render ArrowTopRightOnSquareIcon({ class: 'size-5' })}
-                  Customize Calendar
-                </a>
-                <a href={singleUrlFinalUrl} class="btn btn-sm gap-2">
-                  {@render DownloadIcon({ class: 'size-5' })}
-                  Download CSV
-                </a>
-              </div>
-            {/if}
           </div>
-        {/if}
+        </div>
       </div>
     </div>
 
-    <div class="text-base-content/50 mt-8 text-center text-sm">
-      <p>
-        All operations are performed on the fly, server-side. No data is stored.
-      </p>
+    <!-- Call to Action Form -->
+    <div
+      class="card from-primary/10 to-accent/10 border-primary/20 mt-12 border-2 bg-gradient-to-br shadow-2xl"
+    >
+      <div class="card-body p-8 text-center">
+        <h2 class="mb-2 text-3xl font-bold">Ready to Get Started?</h2>
+        <p class="text-base-content/70 mb-6">
+          Enter your calendar feed URLs below to begin analyzing, merging, and exporting your
+          events.
+        </p>
+
+        <form action="/analyse" method="GET" class="mx-auto w-full max-w-2xl space-y-4">
+          <div class="space-y-3">
+            {#each [...validUrls, ''] as url, i (i)}
+              <div class="flex gap-2">
+                <div class="flex-1">
+                  <label for="calendar-url-{i}" class="sr-only">
+                    Calendar feed URL {i + 1}
+                  </label>
+                  <input
+                    id="calendar-url-{i}"
+                    bind:value={calendarUrls[i]}
+                    name="urls"
+                    type="url"
+                    class="input input-bordered w-full"
+                    placeholder="https://calendar.example.com/feed{i + 1}.ics"
+                    required={i === 0}
+                    aria-label="Calendar feed URL {i + 1}"
+                  />
+                </div>
+                {#if validUrls.length > 1 && url}
+                  <button
+                    type="button"
+                    class="btn btn-square btn-ghost"
+                    onclick={() => removeUrlField(i)}
+                    title="Remove calendar URL {i + 1}"
+                  >
+                    <span class="sr-only">Remove calendar URL {i + 1}</span>
+                    {@render XMarkIcon({ class: 'size-5' })}
+                  </button>
+                {/if}
+              </div>
+            {/each}
+          </div>
+
+          <div class="flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              type="submit"
+              class="btn btn-primary btn-outline"
+              disabled={validUrls.length === 0}
+            >
+              {validUrls.length > 1 ? `Merge and Analyse Calendars` : 'Analyse Calendar'}
+            </button>
+          </div>
+        </form>
+
+        <div class="text-base-content/50 mt-6 text-sm">
+          <p>All operations are performed on the fly, server-side. No data is stored.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

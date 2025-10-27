@@ -22,6 +22,7 @@
     ChevronLeftIcon,
     ChevronRightIcon,
     DownloadIcon,
+    LockClosedIcon,
   }
 </script>
 
@@ -130,11 +131,7 @@
     stroke-width="1.5"
     stroke="currentColor"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M6 18 18 6M6 6l12 12"
-    />
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
   </svg>
 {/snippet}
 
@@ -312,6 +309,23 @@
       stroke-linecap="round"
       stroke-linejoin="round"
       d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+    />
+  </svg>
+{/snippet}
+
+{#snippet LockClosedIcon(props: IconProps = {})}
+  <svg
+    class={props.class || ''}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke-width="1.5"
+    stroke="currentColor"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
     />
   </svg>
 {/snippet}

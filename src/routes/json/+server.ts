@@ -1,12 +1,7 @@
 import { error, json } from '@sveltejs/kit'
 import type { RequestHandler } from './$types'
 import ICAL from 'ical.js'
-import {
-  type Calendar,
-  type Event,
-  fetchCalendar,
-  parseCalendar,
-} from '$lib/utils/calendar.server'
+import { type Calendar, type Event, fetchCalendar, parseCalendar } from '$lib/utils/calendar.server'
 import {
   compareAsc,
   endOfDay,
@@ -35,7 +30,7 @@ export type JsonResponse = Omit<Calendar, 'events'> & {
   query: QueryParams
 }
 
-export const GET: RequestHandler = async ({ url,  }) => {
+export const GET: RequestHandler = async ({ url }) => {
   const query = getQueryParams(url.searchParams)
 
   if (!query.urls.length) {
@@ -43,9 +38,9 @@ export const GET: RequestHandler = async ({ url,  }) => {
   }
 
   // Fetch and parse all calendars
-  const calendars: ICAL.Component[] = await Promise.all(
-    query.urls.map(fetchCalendar)
-  ).catch((e: Error) => error(400, e.message))
+  const calendars: ICAL.Component[] = await Promise.all(query.urls.map(fetchCalendar)).catch(
+    (e: Error) => error(400, e.message)
+  )
 
   const parsedCalendars = calendars.map(parseCalendar)
 
@@ -72,8 +67,7 @@ export const GET: RequestHandler = async ({ url,  }) => {
 
   const sortedEvents = calendarJson.events
     .filter((event) => {
-      const matchesFrom =
-        fromDate && event.start ? date(event.start) >= fromDate : true
+      const matchesFrom = fromDate && event.start ? date(event.start) >= fromDate : true
       const matchesTo = toDate && event.end ? date(event.end) <= toDate : true
       const matchesSummary =
         query.summary && event.summary ? searchByWord(query.summary, event.summary) : true
@@ -81,12 +75,11 @@ export const GET: RequestHandler = async ({ url,  }) => {
       return matchesFrom && matchesTo && matchesSummary
     })
     .sort((a, b) => {
-      if  (!query.sort) return 0
-    
+      if (!query.sort) return 0
+
       const [field, order] = query.sort.split('-')
 
-      const handleOrder = (value: number) =>
-        order === 'desc' ? value * -1 : value
+      const handleOrder = (value: number) => (order === 'desc' ? value * -1 : value)
 
       if (field === 'date') {
         return handleOrder(compareAsc(a.start, b.start))
@@ -114,15 +107,9 @@ export const GET: RequestHandler = async ({ url,  }) => {
             ...acc,
             [monthKey]: {
               ...existingEvent,
-              start: isBefore(existingEvent.start, ev.start)
-                ? existingEvent.start
-                : ev.start,
-              end: isAfter(existingEvent.end, ev.end)
-                ? existingEvent.end
-                : ev.end,
-              totalHours:
-                existingEvent.totalHours +
-                strictDifferenceInHours(ev.end, ev.start),
+              start: isBefore(existingEvent.start, ev.start) ? existingEvent.start : ev.start,
+              end: isAfter(existingEvent.end, ev.end) ? existingEvent.end : ev.end,
+              totalHours: existingEvent.totalHours + strictDifferenceInHours(ev.end, ev.start),
               location: '',
             },
           }
@@ -145,15 +132,9 @@ export const GET: RequestHandler = async ({ url,  }) => {
             ...acc,
             [ev.summary]: {
               ...existingEvent,
-              start: isBefore(existingEvent.start, ev.start)
-                ? existingEvent.start
-                : ev.start,
-              end: isAfter(existingEvent.end, ev.end)
-                ? existingEvent.end
-                : ev.end,
-              totalHours:
-                existingEvent.totalHours +
-                strictDifferenceInHours(ev.end, ev.start),
+              start: isBefore(existingEvent.start, ev.start) ? existingEvent.start : ev.start,
+              end: isAfter(existingEvent.end, ev.end) ? existingEvent.end : ev.end,
+              totalHours: existingEvent.totalHours + strictDifferenceInHours(ev.end, ev.start),
               location: '',
             },
           }
@@ -178,20 +159,18 @@ export const GET: RequestHandler = async ({ url,  }) => {
     }))
   }
 
-  const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents).map(
-    (ev) => {
-      if (query.hourlyRate) {
-        const rate = parseFloat(query.hourlyRate)
-        if (!isNaN(rate)) {
-          return {
-            ...ev,
-            amount: ev.totalHours * rate,
-          }
+  const formatedEvents: AugmentedEvent[] = groupEvents(sortedEvents).map((ev) => {
+    if (query.hourlyRate) {
+      const rate = parseFloat(query.hourlyRate)
+      if (!isNaN(rate)) {
+        return {
+          ...ev,
+          amount: ev.totalHours * rate,
         }
       }
-      return ev
     }
-  )
+    return ev
+  })
 
   // Calculate earliest start and latest end dates
   const earliestStart =
@@ -210,9 +189,8 @@ export const GET: RequestHandler = async ({ url,  }) => {
     formatedEvents.length > 0
       ? format(
           date(
-            formatedEvents.reduce((max, event) =>
-              date(event.end) > date(max.end) ? event : max
-            ).end
+            formatedEvents.reduce((max, event) => (date(event.end) > date(max.end) ? event : max))
+              .end
           ),
           'yyyy-MM-dd HH:mm'
         )
@@ -225,10 +203,7 @@ export const GET: RequestHandler = async ({ url,  }) => {
       totalEventsCount,
       filteredEventsCount: sortedEvents.length,
       totalHours: formatedEvents.reduce((sum, ev) => sum + ev.totalHours, 0),
-      totalAmount: formatedEvents.reduce(
-        (sum, ev) => sum + (ev.amount || 0),
-        0
-      ),
+      totalAmount: formatedEvents.reduce((sum, ev) => sum + (ev.amount || 0), 0),
       earliestStart,
       latestEnd,
     },

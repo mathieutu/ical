@@ -12,11 +12,7 @@ declare global {
 
 export {}
 
-import type {
-  CalendarRangeProps,
-  CalendarMonthProps,
-  CalendarDateProps,
-} from 'cally'
+import type { CalendarRangeProps, CalendarMonthProps, CalendarDateProps } from 'cally'
 
 import 'svelte/elements'
 
