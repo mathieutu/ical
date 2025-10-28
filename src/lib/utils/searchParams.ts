@@ -12,24 +12,27 @@ export type QueryParams = {
 
 export type SearchParam = keyof QueryParams
 
-export const getQueryParams = (url: string | URLSearchParams, filterEmptyValues = true): QueryParams => {
+export const getQueryParams = (
+  url: string | URLSearchParams,
+  filterEmptyValues = true
+): QueryParams => {
   const searchParams = new URLSearchParams(url)
 
   const entries = [
-      ['urls', uniq(searchParams.getAll('urls'))],
-      ['from', searchParams.get('from')],
-      ['to', searchParams.get('to')],
-      ['summary', searchParams.get('summary')],
-      ['sort', searchParams.get('sort') as QueryParams['sort']],
-      ['grouped', searchParams.get('grouped') as QueryParams['grouped']],
-      ['hourlyRate', searchParams.get('hourlyRate')],
-    ]
-  
-    if (filterEmptyValues) {
-      return Object.fromEntries(entries.filter(([, value]) => value))
-    }
+    ['urls', uniq(searchParams.getAll('urls'))],
+    ['from', searchParams.get('from')],
+    ['to', searchParams.get('to')],
+    ['summary', searchParams.get('summary')],
+    ['sort', searchParams.get('sort') as QueryParams['sort']],
+    ['grouped', searchParams.get('grouped') as QueryParams['grouped']],
+    ['hourlyRate', searchParams.get('hourlyRate')],
+  ]
 
-    return Object.fromEntries(entries)
+  if (filterEmptyValues) {
+    return Object.fromEntries(entries.filter(([, value]) => value))
+  }
+
+  return Object.fromEntries(entries)
 }
 
 export const buildSearchParams = (params: QueryParams): URLSearchParams => {

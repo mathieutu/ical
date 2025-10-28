@@ -30,6 +30,65 @@
   />
 </svelte:head>
 
+{#snippet callToActionForm()}
+  <div
+    class="card from-primary/10 to-accent/10 border-primary/20 mt-12 border-2 bg-gradient-to-br shadow-2xl"
+  >
+    <div class="card-body p-8 text-center">
+      <h2 class="mb-2 text-3xl font-bold">Ready to Get Started?</h2>
+      <p class="text-base-content/70 mb-6">
+        Enter your calendar feed URLs below to begin analyzing, merging, and exporting your events.
+      </p>
+
+      <form action="/analyse" method="GET" class="mx-auto w-full max-w-2xl space-y-4">
+        <div class="space-y-3">
+          {#each [...validUrls, ''] as url, i (i)}
+            <div class="input w-full">
+              <label for="calendar-url-{i}" class="sr-only">
+                Calendar feed URL {i + 1}
+              </label>
+              <input
+                id="calendar-url-{i}"
+                bind:value={calendarUrls[i]}
+                name="urls"
+                type="url"
+                class=""
+                placeholder="https://calendar.example.com/feed{i ? `_${i + 1}` : ''}.ics"
+                required={i === 0}
+                aria-label="Calendar feed URL {i + 1}"
+              />
+              {#if validUrls.length > 1 && url}
+                <button
+                  type="button"
+                  class="label text-base-content/40 hover:text-base-content cursor-pointer"
+                  onclick={() => removeUrlField(i)}
+                  title="Remove calendar URL {i + 1}"
+                >
+                  ×
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+
+        <div class="flex flex-col justify-center gap-3 sm:flex-row">
+          <button
+            type="submit"
+            class="btn btn-primary btn-outline"
+            disabled={validUrls.length === 0}
+          >
+            {validUrls.length > 1 ? `Merge and Analyse Calendars` : 'Analyse Calendar'}
+          </button>
+        </div>
+      </form>
+
+      <div class="text-base-content/50 mt-6 text-sm">
+        <p>All operations are performed on the fly, server-side. No data is stored.</p>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
 <div class="from-base-200 via-base-100 to-base-200 min-h-screen w-full bg-gradient-to-br">
   <!-- Hero Section -->
   <div class="bg-primary/5 border-primary/10 border-b">
@@ -92,8 +151,12 @@
       </details>
     {/if}
 
+    <div class="mt-12">
+      {@render callToActionForm()}
+    </div>
+
     <!-- Features Documentation -->
-    <div class="mt-12 space-y-8">
+    <div class="mt-24 space-y-8">
       <div class="text-center">
         <h2 class="text-base-content mb-2 text-3xl font-bold">Powerful Features</h2>
         <p class="text-base-content/60">
@@ -376,63 +439,6 @@
       </div>
     </div>
 
-    <!-- Call to Action Form -->
-    <div
-      class="card from-primary/10 to-accent/10 border-primary/20 mt-12 border-2 bg-gradient-to-br shadow-2xl"
-    >
-      <div class="card-body p-8 text-center">
-        <h2 class="mb-2 text-3xl font-bold">Ready to Get Started?</h2>
-        <p class="text-base-content/70 mb-6">
-          Enter your calendar feed URLs below to begin analyzing, merging, and exporting your
-          events.
-        </p>
-
-        <form action="/analyse" method="GET" class="mx-auto w-full max-w-2xl space-y-4">
-          <div class="space-y-3">
-            {#each [...validUrls, ''] as url, i (i)}
-              <div class="input w-full">
-                <label for="calendar-url-{i}" class="sr-only">
-                  Calendar feed URL {i + 1}
-                </label>
-                <input
-                  id="calendar-url-{i}"
-                  bind:value={calendarUrls[i]}
-                  name="urls"
-                  type="url"
-                  class=""
-                  placeholder="https://calendar.example.com/feed{i ? `_${i + 1}` : ''}.ics"
-                  required={i === 0}
-                  aria-label="Calendar feed URL {i + 1}"
-                />
-                {#if validUrls.length > 1 && url}
-                  <button
-                    type="button"
-                    class="label text-base-content/40 hover:text-base-content cursor-pointer"
-                    onclick={() => removeUrlField(i)}
-                    title="Remove calendar URL {i + 1}"
-                  >
-                    ×
-                  </button>
-                {/if}
-              </div>
-            {/each}
-          </div>
-
-          <div class="flex flex-col justify-center gap-3 sm:flex-row">
-            <button
-              type="submit"
-              class="btn btn-primary btn-outline"
-              disabled={validUrls.length === 0}
-            >
-              {validUrls.length > 1 ? `Merge and Analyse Calendars` : 'Analyse Calendar'}
-            </button>
-          </div>
-        </form>
-
-        <div class="text-base-content/50 mt-6 text-sm">
-          <p>All operations are performed on the fly, server-side. No data is stored.</p>
-        </div>
-      </div>
-    </div>
+    {@render callToActionForm()}
   </div>
 </div>

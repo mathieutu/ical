@@ -463,12 +463,7 @@
             {#if stats.totalEventsCount === 0}
               <!-- No events in calendar at all -->
               <div class="text-base-content/40 mb-4">
-                <svg
-                  class="mx-auto size-16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg class="mx-auto size-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -479,18 +474,15 @@
               </div>
               <h3 class="text-base-content mb-2 text-lg font-semibold">No events in calendar</h3>
               <p class="text-base-content/60 text-sm">
-                {query.urls.length > 1 ? 'These calendars don\'t' : 'This calendar doesn\'t'} contain any events yet. Check back later or verify the
-                calendar{query.urls.length > 1 ? 's URLs are' : ' URL is'} correct.
+                {query.urls.length > 1 ? "These calendars don't" : "This calendar doesn't"} contain any
+                events yet. Check back later or verify the calendar{query.urls.length > 1
+                  ? 's URLs are'
+                  : ' URL is'} correct.
               </p>
             {:else}
               <!-- Filters too strict -->
               <div class="text-warning/40 mb-4">
-                <svg
-                  class="mx-auto size-16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg class="mx-auto size-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -503,8 +495,8 @@
                 No events match your filters
               </h3>
               <p class="text-base-content/60 mb-4 text-sm">
-                  Your filters don't match any of the {stats.totalEventsCount}
-                  events in {query.urls.length > 1 ? 'these calendars' : 'this calendar'}.
+                Your filters don't match any of the {stats.totalEventsCount}
+                events in {query.urls.length > 1 ? 'these calendars' : 'this calendar'}.
               </p>
               <a
                 href={replaceSearchParams({ summary: '', from: '', to: '' })}
